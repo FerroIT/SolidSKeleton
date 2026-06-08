@@ -6,6 +6,7 @@ A document describes geometry as an ordered list of pieces. Each piece either ge
 
 Status: Current
 Version: 0.1
+This specification is in early development and is subject to change. It is not recommended for production use before version 1.0.
 
 ## Specifications
 
