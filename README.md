@@ -21,6 +21,10 @@ Read in order:
 
 See [examples/](examples/).
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md).
+
 ## License
 
 See [LICENSE.md](LICENSE.md).
