@@ -40,8 +40,21 @@
         "x": { "type": "number" },
         "y": { "type": "number" },
         "z": { "type": "number" },
-        "bezier_in":  { "$ref": "#/$defs/vector3" },
-        "bezier_out": { "$ref": "#/$defs/vector3" }
+        "curve_in":  { "$ref": "#/$defs/vector3" },
+        "curve_out": { "$ref": "#/$defs/vector3" },
+        "size": { "$ref": "#/$defs/vector3" },
+        "rotation": { "$ref": "#/$defs/vector3" },
+        "transition_in": { "$ref": "#/$defs/vector2" },
+        "transition_out": { "$ref": "#/$defs/vector2" }
+      }
+    },
+    "vector2": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
       }
     },
     "vector3": {

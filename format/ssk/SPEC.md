@@ -1,7 +1,7 @@
 # SSK Text Encoding Specification
 
 Status: Current
-Version: 0.2
+Version: 0.3
 Applies to: `.ssk`
 
 ## 1. Purpose
@@ -79,8 +79,12 @@ Point fields:
 - `x` : required number
 - `y` : required number
 - `z` : required number
-- `bezier_in` : optional vector3
-- `bezier_out` : optional vector3
+- `curve_in` : optional vector3
+- `curve_out` : optional vector3
+- `size` : optional vector3
+- `rotation` : optional vector3
+- `transition_in` : optional vector2
+- `transition_out` : optional vector2
 
 Unknown point fields are invalid.
 
@@ -94,9 +98,18 @@ A vector3 must be a mapping with:
 
 Unknown vector3 fields are invalid.
 
-## 8. Scalar Types
+## 8. Vector2 Object
 
-### 8.1 Numbers
+A vector2 must be a mapping with:
+
+- `x` : required number
+- `y` : required number
+
+Unknown vector2 fields are invalid.
+
+## 9. Scalar Types
+
+### 9.1 Numbers
 
 Numbers may be integers or decimals.
 
@@ -106,7 +119,7 @@ Numbers must be finite. YAML values such as `.nan`, `.inf`, and `-.inf` are inva
 
 Boolean values are not valid numbers, even if a YAML parser represents booleans as numeric values internally.
 
-### 8.2 Integers
+### 9.2 Integers
 
 The following fields must be integers:
 
@@ -116,7 +129,7 @@ The following fields must be integers:
 
 Integer fields must not contain fractional values.
 
-### 8.3 Strings
+### 9.3 Strings
 
 The following string values are defined.
 
@@ -133,7 +146,7 @@ For `mode`:
 
 String values are case-sensitive.
 
-## 9. Lists
+## 10. Lists
 
 The following fields are lists:
 
@@ -143,7 +156,7 @@ The following fields are lists:
 
 List order must be preserved.
 
-## 10. Properties
+## 11. Properties
 
 `properties` is a user-defined metadata mapping.
 
@@ -162,17 +175,23 @@ Standard behavior must not depend on `properties`.
 
 Implementations should preserve `properties` when possible.
 
-## 11. Optional Fields
+## 12. Optional Fields
 
 If omitted:
 
 - `mode` defaults to `add`
 - `affects` means the piece may use all generated material
 - `properties` is treated as empty
-- `bezier_in` is absent
-- `bezier_out` is absent
+- `curve_in` is absent
+- `curve_out` is absent
+- point `size` uses the piece `size` at that point
+- point `rotation` uses the piece `rotation` at that point
+- `transition_in` is absent
+- `transition_out` is absent
 
-## 12. Field Order
+If both `transition_in` and `transition_out` are absent for a segment, the transition is linear as defined in `geometry/SPEC.md`.
+
+## 13. Field Order
 
 Writers should emit fields in a stable order.
 
@@ -199,8 +218,12 @@ Recommended point order:
 1. `x`
 2. `y`
 3. `z`
-4. `bezier_in`
-5. `bezier_out`
+4. `curve_in`
+5. `curve_out`
+6. `size`
+7. `rotation`
+8. `transition_in`
+9. `transition_out`
 
 Recommended vector order:
 
@@ -208,15 +231,20 @@ Recommended vector order:
 2. `y`
 3. `z`
 
+Recommended transition vector order:
+
+1. `x`
+2. `y`
+
 Parsers must not require a specific field order.
 
-## 13. Comments
+## 14. Comments
 
 YAML comments are allowed.
 
 Writers should not rely on comments to store required data.
 
-## 14. Parser Requirements
+## 15. Parser Requirements
 
 A conforming `.ssk` parser must:
 
@@ -235,7 +263,7 @@ A conforming `.ssk` parser must:
 
 Geometry validation is defined in `geometry/SPEC.md`.
 
-## 15. File Extension
+## 16. File Extension
 
 The file extension for this encoding is:
 
@@ -243,7 +271,7 @@ The file extension for this encoding is:
 .ssk
 ```
 
-## 16. Version
+## 17. Version
 
 The optional `version` field declares the specification version the file targets.
 
@@ -252,7 +280,7 @@ The value is a string in the form `major.minor`.
 For this version:
 
 ```text
-0.1
+0.3
 ```
 
 If absent, no version is declared.
@@ -261,7 +289,7 @@ Parsers must reject files with an unsupported major version.
 
 Parsers must not reject files with an unknown minor version.
 
-## 17. Binary Conversion Notes
+## 18. Binary Conversion Notes
 
 The `.ssk` text encoding can represent decimal values with more precision than the `.sskb` binary encoding.
 

@@ -1,7 +1,7 @@
 # SolidSKeleton Geometry Specification
 
 Status: Current
-Version: 0.1
+Version: 0.3
 
 ## 1. Purpose
 
@@ -70,8 +70,9 @@ SolidSKeleton uses:
 
 - right-handed coordinates
 - Z-up orientation
-- millimeters for position, Bezier, and size values
+- millimeters for position, path curve, and size values
 - degrees for rotation values
+- unitless values for transition controls
 
 World UP is positive Z.
 
@@ -109,8 +110,12 @@ Each point contains:
 - `x`
 - `y`
 - `z`
-- optional `bezier_in`
-- optional `bezier_out`
+- optional `curve_in`
+- optional `curve_out`
+- optional `size`
+- optional `rotation`
+- optional `transition_in`
+- optional `transition_out`
 
 Rules:
 
@@ -118,32 +123,36 @@ Rules:
 - points are ordered
 - point positions are in world space
 - point values must be finite numbers
+- if point `size` is omitted, the piece `size` is used at that point
+- if point `rotation` is omitted, the piece `rotation` is used at that point
 
-## 7. Bezier Controls
+## 7. Path Curve Controls
 
-`bezier_in` and `bezier_out` are optional Bezier control points.
+`curve_in` and `curve_out` are optional path curve controls.
+
+In this format, a path curve segment is represented as a cubic Bezier curve.
 
 Rules:
 
-- Bezier control points are in world space
-- first point `bezier_in` is ignored
-- last point `bezier_out` is ignored
+- path curve controls are in world space
+- first point `curve_in` is ignored
+- last point `curve_out` is ignored
 
 For the segment from `points[i]` to `points[i + 1]`:
 
-- `points[i].bezier_out` is the outgoing control point
-- `points[i + 1].bezier_in` is the incoming control point
+- `points[i].curve_out` is the outgoing curve control
+- `points[i + 1].curve_in` is the incoming curve control
 
-The segment is interpreted as:
+The segment is interpreted as a cubic Bezier curve:
 
 ```text
 P0 = points[i]
-P1 = points[i].bezier_out, or P0 if absent
-P2 = points[i + 1].bezier_in, or P3 if absent
+P1 = points[i].curve_out, or P0 if absent
+P2 = points[i + 1].curve_in, or P3 if absent
 P3 = points[i + 1]
 ```
 
-If both Bezier controls are absent, the segment is linear.
+If both path curve controls are absent, the segment is linear.
 
 ### 7.1 Path Segments and Tangents
 
@@ -151,7 +160,7 @@ For path-defined pieces, each adjacent point pair defines one path segment.
 
 For a linear segment, the tangent is the normalized direction from the first point to the second point.
 
-For a Bezier segment, the tangent is the normalized first derivative of the cubic Bezier curve at the evaluated position.
+For a curved segment, the tangent is the normalized first derivative of the cubic Bezier curve at the evaluated position.
 
 If the derivative at an evaluated position has zero length, implementations must use the nearest non-zero derivative on the same segment. If no non-zero derivative exists for a segment, that segment is degenerate and contributes no generated or subtractive volume.
 
@@ -191,9 +200,9 @@ For point-defined pieces:
 
 Path-defined pieces have a cap at each end of the path.
 
-If `size.z` is `0`, caps are flat.
+If the effective `size.z` at an endpoint is `0`, that endpoint cap is flat.
 
-If `size.z` is non-zero, each cap is the outward half of a point-defined piece with the same shape and size, placed at that endpoint.
+If the effective `size.z` at an endpoint is non-zero, each cap is the outward half of a point-defined piece with the same shape, effective size, and effective rotation, placed at that endpoint.
 
 ## 9. Local Axes and Rotation
 
@@ -255,6 +264,20 @@ Rotation affects:
 - the orientation of `ngon` sides
 - the generated form orientation
 
+### 9.2 Point Rotation Overrides
+
+Each point may define `rotation`.
+
+The effective rotation at a point is the point `rotation` if present, otherwise the piece `rotation`.
+
+For point-defined pieces, the effective rotation of the only point follows the same rule.
+
+For path-defined pieces, the effective rotation is interpolated along each segment.
+
+Rotation interpolation is component-wise in degrees, using the segment transition curve defined in section 10.2.
+
+For each component, implementations must interpolate across the shortest signed angular delta modulo 360 degrees.
+
 ## 10. Size
 
 `size` contains:
@@ -263,18 +286,99 @@ Rotation affects:
 - `y`
 - `z`
 
-All size values are radii, measured from the piece center outward along each local axis.
+All size values are radii.
+
+For point-defined pieces, they are measured from the point origin along the local axes.
+
+For path-defined pieces, they are measured from the path centerline along the local axes.
 
 Rules:
 
 - size values must be finite numbers
 - size values must be non-negative
-- if two or more size values are `0`, the piece is ignored
 - one zero size value is allowed
 
-For path-defined pieces, `size.x` and `size.y` define the cross-section radii. `size.z` defines the cap depth at each end of the path. See section 8.3.
+For path-defined pieces:
+
+- `size.x` and `size.y` define the cross-section radii
+- `size.z` defines the cap depth at each end of the path
 
 For point-defined pieces, size defines the radius of the form around the point on each local axis.
+
+### 10.1 Point Size Overrides
+
+Each point may define `size`.
+
+The effective size at a point is the point `size` if present, otherwise the piece `size`.
+
+For the segment from `points[i]` to `points[i + 1]`:
+
+- `S0` is the effective size at `points[i]`
+- `S1` is the effective size at `points[i + 1]`
+- evaluated size is interpolated component-wise from `S0` to `S1`
+- if the segment has no transition controls, interpolation is linear in segment position
+- if the segment has transition controls, interpolation uses the progress defined in section 10.2
+
+Negative interpolated components are clamped to `0`.
+
+An evaluated size is degenerate if two or more of its components are `0`.
+
+For path-defined pieces, a degenerate evaluated size contributes no generated or subtractive volume at that position.
+
+### 10.2 Point Attribute Transitions
+
+`transition_in` and `transition_out` are optional transition controls.
+
+They remap interpolation progress for `size` and `rotation` on a segment.
+
+They do not affect point position or path shape.
+
+Each segment transition is a cubic Bezier remapping from normalized segment position to interpolation progress.
+
+For a segment:
+
+- `u` is normalized segment position in `[0, 1]`
+- `v` is interpolation progress used for `size` and `rotation`
+- if both transition controls are absent, `v = u`
+
+Each transition control contains:
+
+- `x` = normalized segment position
+- `y` = interpolation progress
+
+Rules:
+
+- transition control values must be finite numbers
+- transition `x` is segment position and must be in the inclusive range `[0, 1]`
+- transition `y` values may be any finite number
+- first point `transition_in` is ignored
+- last point `transition_out` is ignored
+
+For the segment from `points[i]` to `points[i + 1]`:
+
+- `points[i].transition_out` is the outgoing transition control
+- `points[i + 1].transition_in` is the incoming transition control
+- if `points[i].transition_out` is absent, the outgoing transition control is `(1 / 3, 1 / 3)`
+- if `points[i + 1].transition_in` is absent, the incoming transition control is `(2 / 3, 2 / 3)`
+
+The segment transition curve is interpreted as a cubic Bezier curve:
+
+```text
+T0 = (0, 0)
+T1 = points[i].transition_out, or (1 / 3, 1 / 3) if absent
+T2 = points[i + 1].transition_in, or (2 / 3, 2 / 3) if absent
+T3 = (1, 1)
+```
+
+For each segment, the transition curve must be monotone in `x`. This requires `0 <= T1.x <= T2.x <= 1`.
+
+For a given `u`, solve the transition curve for the unique point where `x = u`. That point's `y` value is `v`.
+
+The same segment transition curve applies to both `size` and `rotation` on that segment.
+
+Because transition `y` is not clamped, `v` may be outside the range `[0, 1]`.
+
+This can overshoot the endpoint values. For `size`, negative interpolated components are clamped as defined in section 10.1.
 
 ## 11. Shapes
 
@@ -374,7 +478,8 @@ Writers should omit `affects` from `add` pieces.
 
 A piece is ignored if either of the following is true:
 
-- two or more size values are `0`
+- the piece is point-defined and its effective size is degenerate
+- the piece is path-defined and every path segment contributes no generated or subtractive volume because of degenerate effective size or degenerate path shape
 - the piece is path-defined and has no non-degenerate path segments
 
 Ignored pieces:
@@ -396,10 +501,16 @@ A valid SolidSKeleton geometry document must satisfy:
 - ids are contiguous
 - every piece has at least one point
 - all point coordinates are finite numbers
-- all Bezier coordinates are finite numbers
+- all path curve control coordinates are finite numbers
+- all point size values are finite numbers
+- all point size values are non-negative
 - all rotation values are finite numbers
+- all point rotation values are finite numbers
 - all size values are finite numbers
 - all size values are non-negative
+- all transition control values are finite numbers
+- all transition `x` values are in the inclusive range `[0, 1]`
+- each segment transition curve is monotone in `x`
 - `shape` is a defined shape
 - `mode`, if present, is a defined mode
 - `shape = ngon` has valid `sides`

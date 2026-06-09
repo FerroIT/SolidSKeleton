@@ -1,7 +1,7 @@
 # SSKB Binary Encoding Specification
 
 Status: Current
-Version: 0.2
+Version: 0.3
 Applies to: `.sskb`
 
 ## 1. Purpose
@@ -65,7 +65,7 @@ For this version:
 
 ```text
 major = 0
-minor = 1
+minor = 3
 ```
 
 Parsers must reject files with an unsupported major version.
@@ -107,10 +107,18 @@ Each point is encoded in this order:
 
 ```text
 position           vector3
-has_bezier_in      u8
-bezier_in          vector3, present only if has_bezier_in != 0
-has_bezier_out     u8
-bezier_out         vector3, present only if has_bezier_out != 0
+has_curve_in       u8
+curve_in           vector3, present only if has_curve_in != 0
+has_curve_out      u8
+curve_out          vector3, present only if has_curve_out != 0
+has_size           u8
+size               vector3, present only if has_size != 0
+has_rotation       u8
+rotation           vector3, present only if has_rotation != 0
+has_transition_in  u8
+transition_in      vector2, present only if has_transition_in != 0
+has_transition_out u8
+transition_out     vector2, present only if has_transition_out != 0
 ```
 
 ## 8. Vector3 Layout
@@ -123,9 +131,18 @@ y    f32
 z    f32
 ```
 
-## 9. Enum Values
+## 9. Vector2 Layout
 
-### 9.1 shape
+A vector2 is encoded as:
+
+```text
+x    f32
+y    f32
+```
+
+## 10. Enum Values
+
+### 10.1 shape
 
 `shape` is encoded as `u8`.
 
@@ -138,7 +155,7 @@ Defined values:
 
 Other values are invalid.
 
-### 9.2 mode
+### 10.2 mode
 
 `mode` is encoded as `u8`.
 
@@ -152,7 +169,7 @@ Defined values:
 
 Other values are invalid.
 
-## 10. Optional Field Encoding
+## 11. Optional Field Encoding
 
 Optional fields use a presence byte.
 
@@ -166,12 +183,16 @@ non-zero = present
 This applies to:
 
 - `sides`
-- `bezier_in`
-- `bezier_out`
+- `curve_in`
+- `curve_out`
+- point `size`
+- point `rotation`
+- `transition_in`
+- `transition_out`
 
 Writers should emit `1` for present optional fields. Parsers must treat any non-zero presence byte as present.
 
-## 11. Array Encoding
+## 12. Array Encoding
 
 Arrays are encoded as:
 
@@ -188,7 +209,7 @@ This applies to:
 - `points`
 - `affects`
 
-## 12. Properties Encoding
+## 13. Properties Encoding
 
 `properties` is user-defined metadata.
 
@@ -213,15 +234,21 @@ Implementations that do not interpret `properties` should preserve the raw bytes
 
 Parsers that expose properties as structured metadata must parse the blob as UTF-8 YAML and reject malformed blobs. Parsers that only preserve raw property bytes may defer YAML parsing.
 
-## 13. Stored Defaults
+## 14. Stored Defaults
 
 `.sskb` stores `mode` explicitly.
 
 Optional fields are stored through presence bytes.
 
+If point `size` is absent, the piece `size` is used at that point.
+
+If point `rotation` is absent, the piece `rotation` is used at that point.
+
+If both transition controls for a segment are absent, the transition is linear as defined in `geometry/SPEC.md`.
+
 If `properties` is absent or empty, its property blob length is `0`.
 
-## 14. Parser Requirements
+## 15. Parser Requirements
 
 A conforming `.sskb` parser must:
 
@@ -242,7 +269,7 @@ Parsers must consume exactly the bytes required by the encoded values. Extra tra
 
 Geometry validation is defined in `geometry/SPEC.md`.
 
-## 15. File Extension
+## 16. File Extension
 
 The file extension for this encoding is:
 
