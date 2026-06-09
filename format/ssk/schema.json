@@ -27,7 +27,7 @@
         "size":     { "$ref": "#/$defs/vector3" },
         "shape":    { "type": "string", "enum": ["circle", "ngon"] },
         "sides":    { "type": "integer", "minimum": 3 },
-        "mode":     { "type": "string", "enum": ["add", "subtract"] },
+        "mode":     { "type": "string", "enum": ["add", "subtract", "intersect"] },
         "affects":  { "type": "array", "items": { "type": "integer", "minimum": 0 } },
         "properties": { "type": "object" }
       }

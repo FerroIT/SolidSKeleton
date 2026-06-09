@@ -1,7 +1,7 @@
 # SSKB Binary Encoding Specification
 
 Status: Current
-Version: 0.1
+Version: 0.2
 Applies to: `.sskb`
 
 ## 1. Purpose
@@ -147,6 +147,7 @@ Defined values:
 ```text
 0 = add
 1 = subtract
+2 = intersect
 ```
 
 Other values are invalid.

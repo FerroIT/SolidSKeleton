@@ -307,6 +307,7 @@ Defined modes:
 
 - `add`
 - `subtract`
+- `intersect`
 
 If `mode` is omitted, it defaults to `add`.
 
@@ -320,6 +321,16 @@ If `mode` is omitted, it defaults to `add`.
 
 Subtract pieces never modify piece definitions.
 
+### 12.3 intersect
+
+`intersect` pieces generate material where they overlap existing generated material.
+
+Non-overlapping material from an `intersect` piece is ignored.
+
+Intersect pieces never remove generated material.
+
+If `affects` is present, it limits which generated material an `intersect` piece may overlap.
+
 ## 13. Boolean Evaluation
 
 Pieces are evaluated in two phases.
@@ -327,6 +338,10 @@ Pieces are evaluated in two phases.
 ### 13.1 Add Phase
 
 All `add` pieces generate material.
+
+All `intersect` pieces are evaluated in the add phase.
+
+All kept material from `intersect` pieces is also generated material.
 
 ### 13.2 Subtract Phase
 
@@ -338,16 +353,20 @@ Subtract operations cannot create negative material. They only remove existing g
 
 ## 14. Affects
 
-`affects` limits which generated material a subtract piece may modify.
+`affects` limits which generated material another piece may use.
+
+For `subtract` pieces, `affects` limits which generated material may be removed.
+
+For `intersect` pieces, `affects` limits which generated material may be overlapped.
 
 Rules:
 
 - `affects` contains piece ids
 - each affected id must reference an existing piece
-- only generated material from `add` pieces can be removed
-- references to ignored pieces or `subtract` pieces are valid but have no generated material to modify
+- only generated material from `add` and `intersect` pieces can be used
+- references to ignored pieces or `subtract` pieces are valid but have no generated material to use
 - if `mode` is `add`, `affects` is ignored
-- if `affects` is omitted, the piece may affect all generated material
+- if `affects` is omitted, the piece may use all generated material
 
 Writers should omit `affects` from `add` pieces.
 

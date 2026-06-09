@@ -1,7 +1,7 @@
 # SSK Text Encoding Specification
 
 Status: Current
-Version: 0.1
+Version: 0.2
 Applies to: `.ssk`
 
 ## 1. Purpose
@@ -129,6 +129,7 @@ For `mode`:
 
 - `add`
 - `subtract`
+- `intersect`
 
 String values are case-sensitive.
 
@@ -166,7 +167,7 @@ Implementations should preserve `properties` when possible.
 If omitted:
 
 - `mode` defaults to `add`
-- `affects` means the piece may affect all generated material
+- `affects` means the piece may use all generated material
 - `properties` is treated as empty
 - `bezier_in` is absent
 - `bezier_out` is absent
