@@ -1,64 +1,49 @@
 # SSKB Binary Encoding Specification
 
 Status: Current
-Version: 0.3
+version: 0.4
 Applies to: `.sskb`
 
 ## 1. Purpose
 
-`.sskb` is the binary encoding of the SolidSKeleton geometry model.
+`.sskb` is the binary encoding of the same SolidSKeleton data represented by `.ssk`.
 
-This document defines how SolidSKeleton data is represented in binary form.
+This document defines only binary-specific storage, layout, and parser rules.
 
-Geometry meaning and validation are defined in:
+Unless this document explicitly overrides representation, decoded `.sskb` data uses the same structure, required fields, optional fields, scalar types, enum names, list order, and property rules as `format/ssk/SPEC.md`.
 
-```text
-geometry/SPEC.md
-```
+Geometry meaning and validation are defined in `geometry/SPEC.md`.
 
-## 2. Byte Order
+Binary-specific overrides:
+
+- the file version is stored in the header, not as a root `version` field
+- `mode` is stored explicitly
+- optional fields are represented by presence bytes or property blob length
+- `shape` and `mode` are stored as numeric enum values
+
+## 2. Binary Basics
 
 All multi-byte values are little-endian.
 
-## 3. Primitive Types
-
-The following primitive types are used:
+Primitive types:
 
 - `u8` : unsigned 8-bit integer
 - `u16` : unsigned 16-bit integer
 - `u32` : unsigned 32-bit integer
 - `f32` : IEEE 754 32-bit floating-point number
 
-All `f32` values must be finite. `NaN` and infinite `f32` values are invalid. See `geometry/SPEC.md` for geometry validation rules.
+All `f32` values must be finite. `NaN` and infinite values are invalid.
 
-All integer values are unsigned. Values that map to geometry fields with stricter rules, such as contiguous piece ids or `sides >= 3`, must also satisfy the geometry specification.
+Decoded values must also satisfy `format/ssk/SPEC.md` and `geometry/SPEC.md`.
 
-## 4. File Header
+## 3. File Header
 
 Every `.sskb` file begins with:
 
-1. magic bytes
-2. major version
-3. minor version
-
-Layout:
-
 ```text
-magic      4 bytes
+magic      4 bytes  "SSKB"
 major      u16
 minor      u16
-```
-
-Magic bytes:
-
-```text
-SSKB
-```
-
-Hex:
-
-```text
-53 53 4B 42
 ```
 
 For this version:
@@ -72,9 +57,9 @@ Parsers must reject files with an unsupported major version.
 
 Parsers must not reject files with an unknown minor version.
 
-## 5. Root Layout
+## 4. Layout
 
-After the header, the root object is encoded as:
+### 4.1 Root
 
 ```text
 piece_count       u32
@@ -82,9 +67,7 @@ pieces            piece[piece_count]
 root_properties   property_blob
 ```
 
-## 6. Piece Layout
-
-Each piece is encoded in this order:
+### 4.2 Piece
 
 ```text
 id                 u32
@@ -96,14 +79,13 @@ shape              u8
 has_sides          u8
 sides              u32, present only if has_sides != 0
 mode               u8
-affects_count      u32
-affects            u32[affects_count]
+has_affects        u8
+affects_count      u32, present only if has_affects != 0
+affects            u32[affects_count], present only if has_affects != 0
 piece_properties   property_blob
 ```
 
-## 7. Point Layout
-
-Each point is encoded in this order:
+### 4.3 Point
 
 ```text
 position           vector3
@@ -121,45 +103,23 @@ has_transition_out u8
 transition_out     vector2, present only if has_transition_out != 0
 ```
 
-## 8. Vector3 Layout
-
-A vector3 is encoded as:
+### 4.4 Vectors
 
 ```text
-x    f32
-y    f32
-z    f32
+vector3 = x f32, y f32, z f32
+vector2 = x f32, y f32
 ```
 
-## 9. Vector2 Layout
+## 5. Enum Encoding
 
-A vector2 is encoded as:
-
-```text
-x    f32
-y    f32
-```
-
-## 10. Enum Values
-
-### 10.1 shape
-
-`shape` is encoded as `u8`.
-
-Defined values:
+`shape` values:
 
 ```text
 0 = circle
 1 = ngon
 ```
 
-Other values are invalid.
-
-### 10.2 mode
-
-`mode` is encoded as `u8`.
-
-Defined values:
+`mode` values:
 
 ```text
 0 = add
@@ -167,11 +127,9 @@ Defined values:
 2 = intersect
 ```
 
-Other values are invalid.
+Other enum values are invalid.
 
-## 11. Optional Field Encoding
-
-Optional fields use a presence byte.
+## 6. Presence and Arrays
 
 Presence byte values:
 
@@ -180,19 +138,7 @@ Presence byte values:
 non-zero = present
 ```
 
-This applies to:
-
-- `sides`
-- `curve_in`
-- `curve_out`
-- point `size`
-- point `rotation`
-- `transition_in`
-- `transition_out`
-
-Writers should emit `1` for present optional fields. Parsers must treat any non-zero presence byte as present.
-
-## 12. Array Encoding
+Writers should emit `1` for present fields. Parsers must treat any non-zero presence byte as present.
 
 Arrays are encoded as:
 
@@ -203,17 +149,7 @@ items      item[count]
 
 Array order must be preserved.
 
-This applies to:
-
-- `pieces`
-- `points`
-- `affects`
-
-## 13. Properties Encoding
-
-`properties` is user-defined metadata.
-
-In `.sskb`, properties are stored as a raw UTF-8 YAML byte blob.
+## 7. Properties
 
 A property blob is encoded as:
 
@@ -222,54 +158,36 @@ byte_length    u32
 bytes          u8[byte_length]
 ```
 
-If no properties are present, `byte_length` is `0`.
+An empty property blob means `properties` is absent or empty. `.sskb` does not distinguish between absent and empty `properties`.
 
-The byte content, when present, must represent the same metadata mapping allowed by `.ssk`: a UTF-8 YAML mapping with string keys whose values may be scalars, sequences, or nested mappings. Anchors, aliases, tags, and directives are not permitted. Duplicate keys are invalid.
-
-The YAML mapping is encoded without a required document marker. An empty byte blob means properties are absent or empty.
-
-Standard behavior must not depend on `properties`.
+Non-empty property bytes must be a UTF-8 YAML mapping using the same YAML restrictions as `.ssk`. A document marker is not required.
 
 Implementations that do not interpret `properties` should preserve the raw bytes when possible.
 
-Parsers that expose properties as structured metadata must parse the blob as UTF-8 YAML and reject malformed blobs. Parsers that only preserve raw property bytes may defer YAML parsing.
+Parsers that expose properties as structured metadata must parse the blob and reject malformed blobs. Parsers that only preserve raw property bytes may defer parsing.
 
-## 14. Stored Defaults
-
-`.sskb` stores `mode` explicitly.
-
-Optional fields are stored through presence bytes.
-
-If point `size` is absent, the piece `size` is used at that point.
-
-If point `rotation` is absent, the piece `rotation` is used at that point.
-
-If both transition controls for a segment are absent, the transition is linear as defined in `geometry/SPEC.md`.
-
-If `properties` is absent or empty, its property blob length is `0`.
-
-## 15. Parser Requirements
+## 8. Parser Requirements
 
 A conforming `.sskb` parser must:
 
 - verify magic bytes
 - verify version compatibility
 - read all multi-byte values as little-endian
-- preserve piece order
-- preserve point order
+- preserve `pieces` order
+- preserve `points` order
 - reject invalid enum values
 - reject non-finite `f32` values
 - reject count values that exceed remaining input length
 - reject truncated input
-- reject structurally invalid arrays
-- reject invalid optional-field layouts
+- reject invalid presence-controlled layouts
 - reject malformed property blobs if property parsing is attempted
+- consume exactly the bytes required by the encoded values
 
-Parsers must consume exactly the bytes required by the encoded values. Extra trailing bytes after the root property blob are invalid.
+Extra trailing bytes after the root property blob are invalid.
 
-Geometry validation is defined in `geometry/SPEC.md`.
+Decoded data must satisfy `format/ssk/SPEC.md` structure rules and `geometry/SPEC.md` validation rules.
 
-## 16. File Extension
+## 9. File Extension
 
 The file extension for this encoding is:
 

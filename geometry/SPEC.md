@@ -1,7 +1,7 @@
 # SolidSKeleton Geometry Specification
 
 Status: Current
-Version: 0.3
+version: 0.4
 
 ## 1. Purpose
 
@@ -42,7 +42,7 @@ A document may contain zero or more pieces.
 
 Keys must be strings.
 
-Values may be scalars, lists, or mappings.
+Values may be null, booleans, finite numbers, strings, lists, or mappings.
 
 Duplicate keys are invalid.
 
@@ -64,13 +64,15 @@ Each piece contains:
 - optional `affects`
 - optional `properties` mapping
 
+The piece `properties` field follows the same rules as document `properties`.
+
 ## 4. Coordinate System and Units
 
 SolidSKeleton uses:
 
 - right-handed coordinates
 - Z-up orientation
-- millimeters for position, path curve, and size values
+- millimeters for point positions, path curve controls, and size values
 - degrees for rotation values
 - unitless values for transition controls
 
@@ -122,7 +124,7 @@ Rules:
 - each piece must contain at least one point
 - points are ordered
 - point positions are in world space
-- point values must be finite numbers
+- point coordinates must be finite numbers
 - if point `size` is omitted, the piece `size` is used at that point
 - if point `rotation` is omitted, the piece `rotation` is used at that point
 
@@ -130,7 +132,7 @@ Rules:
 
 `curve_in` and `curve_out` are optional path curve controls.
 
-In this format, a path curve segment is represented as a cubic Bezier curve.
+A path segment is represented as a cubic Bezier curve.
 
 Rules:
 
@@ -156,7 +158,7 @@ If both path curve controls are absent, the segment is linear.
 
 ### 7.1 Path Segments and Tangents
 
-For path-defined pieces, each adjacent point pair defines one path segment.
+For a path-defined piece, each adjacent point pair defines one path segment.
 
 For a linear segment, the tangent is the normalized direction from the first point to the second point.
 
@@ -176,7 +178,7 @@ A piece with more than one point is path-defined.
 
 The piece follows the ordered path through its points.
 
-For path-defined pieces:
+For a path-defined piece:
 
 - the path tangent defines the local Z axis along the path
 - local X and local Y form the cross-section plane
@@ -187,22 +189,20 @@ For path-defined pieces:
 
 A piece with exactly one point is point-defined.
 
-The piece has no path length. local Z defaults to world UP.
+The piece has no path length. Local Z defaults to world UP.
 
-For point-defined pieces:
+For a point-defined piece:
 
 - local X and local Y are perpendicular to local Z
 - `shape` is interpreted as a volume form around the point
-- `size` is applied around the point
-- `rotation` affects the local axes
 
 ### 8.3 Caps
 
-Path-defined pieces have a cap at each end of the path.
+A path-defined piece has a cap at each end of the path.
 
 If the effective `size.z` at an endpoint is `0`, that endpoint cap is flat.
 
-If the effective `size.z` at an endpoint is non-zero, each cap is the outward half of a point-defined piece with the same shape, effective size, and effective rotation, placed at that endpoint.
+If the effective `size.z` at an endpoint is non-zero, each cap is the half of a point-defined piece that extends away from the path interior, with the same shape, effective size, and effective rotation, placed at that endpoint.
 
 ## 9. Local Axes and Rotation
 
@@ -228,13 +228,15 @@ For example, a rotation of `x: 90, y: 0, z: 0` rotates the local axes 90 degrees
 
 Positive angles follow the right-hand rule.
 
-For path-defined pieces, local Z additionally aligns with the path tangent direction at each point along the path.
+For a path-defined piece, local Z aligns with the path tangent direction at each evaluated position.
 
 ### 9.1 Path Frame Construction
 
-For path-defined pieces, implementations must construct a local frame along the path.
+For a path-defined piece, implementations must construct a local frame along the path.
 
 At every evaluated position, the local frame must be orthonormal and right-handed.
+
+Rotated local axes in this section use the effective rotation at the evaluated position.
 
 For a non-degenerate segment, let `T` be the normalized path tangent at the evaluated position. local Z equals `T`.
 
@@ -258,11 +260,7 @@ If `T_prev` and `T_next` are opposite, or if a required tangent cannot be determ
 
 Implementations may use a numeric tolerance when testing whether a projected axis or derivative has zero length, or whether two tangent directions are equal or opposite. The tolerance must be applied consistently within the same evaluation.
 
-Rotation affects:
-
-- the orientation of `size`
-- the orientation of `ngon` sides
-- the generated form orientation
+Rotation defines the orientation of the local axes, including size axes and `ngon` side orientation.
 
 ### 9.2 Point Rotation Overrides
 
@@ -270,9 +268,9 @@ Each point may define `rotation`.
 
 The effective rotation at a point is the point `rotation` if present, otherwise the piece `rotation`.
 
-For point-defined pieces, the effective rotation of the only point follows the same rule.
+For a point-defined piece, the effective rotation of the only point follows the same rule.
 
-For path-defined pieces, the effective rotation is interpolated along each segment.
+For a path-defined piece, the effective rotation is interpolated along each segment.
 
 Rotation interpolation is component-wise in degrees, using the segment transition curve defined in section 10.2.
 
@@ -288,22 +286,23 @@ For each component, implementations must interpolate across the shortest signed 
 
 All size values are radii.
 
-For point-defined pieces, they are measured from the point origin along the local axes.
+For a point-defined piece, they are measured from the point origin along the local axes.
 
-For path-defined pieces, they are measured from the path centerline along the local axes.
+For a path-defined piece, they are measured from the path centerline along the local axes.
 
 Rules:
 
 - size values must be finite numbers
 - size values must be non-negative
-- one zero size value is allowed
+- zero size values are allowed
+- a size is degenerate if 2 or more components are 0
 
-For path-defined pieces:
+For a path-defined piece:
 
 - `size.x` and `size.y` define the cross-section radii
 - `size.z` defines the cap depth at each end of the path
 
-For point-defined pieces, size defines the radius of the form around the point on each local axis.
+For a point-defined piece, size defines the radius of the form around the point on each local axis.
 
 ### 10.1 Point Size Overrides
 
@@ -323,7 +322,7 @@ Negative interpolated components are clamped to `0`.
 
 An evaluated size is degenerate if two or more of its components are `0`.
 
-For path-defined pieces, a degenerate evaluated size contributes no generated or subtractive volume at that position.
+For a path-defined piece, a degenerate evaluated size contributes no generated or subtractive volume at that position.
 
 ### 10.2 Point Attribute Transitions
 
@@ -389,15 +388,15 @@ Defined shapes:
 
 ### 11.1 circle
 
-For path-defined pieces, `circle` defines a smooth cross-section using `size.x` and `size.y` as radii. If `size.x` and `size.y` are equal, the cross-section is circular. If they differ, the cross-section is elliptical.
+For a path-defined piece, `circle` defines a smooth cross-section using `size.x` and `size.y` as radii. If `size.x` and `size.y` are equal, the cross-section is circular. If they differ, the cross-section is elliptical.
 
-For point-defined pieces, `circle` defines an ellipsoidal form around the point using `size.x`, `size.y`, and `size.z` as radii.
+For a point-defined piece, `circle` defines an ellipsoidal form around the point using `size.x`, `size.y`, and `size.z` as radii.
 
 ### 11.2 ngon
 
-For path-defined pieces, `ngon` defines a polygonal cross-section with `sides` sides. The polygon is regular before scaling by `size.x` and `size.y`.
+For a path-defined piece, `ngon` defines a regular polygon cross-section with `sides` sides before scaling by `size.x` and `size.y`.
 
-For point-defined pieces, `ngon` defines a bipyramidal form using the same `sides`-sided polygon cross-section. It is regular before scaling by `size.x`, `size.y`, and `size.z`.
+For a point-defined piece, `ngon` defines a bipyramidal form using a regular polygon cross-section with `sides` sides before scaling by `size.x`, `size.y`, and `size.z`.
 
 Rules:
 
@@ -417,23 +416,23 @@ If `mode` is omitted, it defaults to `add`.
 
 ### 12.1 add
 
-`add` pieces generate material.
+An `add` piece generates material.
 
 ### 12.2 subtract
 
-`subtract` pieces remove overlapping generated material.
+A `subtract` piece removes overlapping generated material.
 
-Subtract pieces never modify piece definitions.
+A `subtract` piece never modifies piece definitions.
 
 ### 12.3 intersect
 
-`intersect` pieces generate material where they overlap existing generated material.
+An `intersect` piece contributes only the parts of its candidate volume that overlap candidate volume from another non-ignored `add` or `intersect` piece allowed by `affects`.
 
-Non-overlapping material from an `intersect` piece is ignored.
+Non-overlapping parts are ignored.
 
-Intersect pieces never remove generated material.
+An `intersect` piece never removes generated material.
 
-If `affects` is present, it limits which generated material an `intersect` piece may overlap.
+If `affects` is present, it limits which other pieces an `intersect` piece may overlap.
 
 ## 13. Boolean Evaluation
 
@@ -441,46 +440,50 @@ Pieces are evaluated in two phases.
 
 ### 13.1 Add Phase
 
-All `add` pieces generate material.
+The add phase determines generated material from all `add` and `intersect` pieces.
 
-All `intersect` pieces are evaluated in the add phase.
+Candidate volume is a piece volume before boolean operations.
 
-All kept material from `intersect` pieces is also generated material.
+Each `add` piece contributes its full non-ignored volume.
+
+Each `intersect` piece contributes the volume defined in section 12.3.
 
 ### 13.2 Subtract Phase
 
-After all add material has been generated, all `subtract` pieces remove overlapping generated material.
+After all add material has been generated, each `subtract` piece removes overlapping generated material.
 
-If multiple subtract pieces affect the same generated material, their removal is combined.
+If multiple `subtract` pieces affect the same generated material, their removal is combined.
 
-Subtract operations cannot create negative material. They only remove existing generated material.
+Subtract operations only remove generated material.
 
 ## 14. Affects
 
-`affects` limits which generated material another piece may use.
+`affects` limits which other pieces a piece may use as boolean input.
 
-For `subtract` pieces, `affects` limits which generated material may be removed.
+For a `subtract` piece, `affects` limits which generated material may be removed.
 
-For `intersect` pieces, `affects` limits which generated material may be overlapped.
+For an `intersect` piece, `affects` limits which candidate volume may be overlapped.
 
 Rules:
 
 - `affects` contains piece ids
 - each affected id must reference an existing piece
-- only generated material from `add` and `intersect` pieces can be used
-- references to ignored pieces or `subtract` pieces are valid but have no generated material to use
+- a piece cannot use itself as boolean input
+- only material from another non-ignored piece with mode `add` or `intersect` can be used
+- a reference to an ignored piece or a `subtract` piece is valid but provides no boolean input
 - if `mode` is `add`, `affects` is ignored
-- if `affects` is omitted, the piece may use all generated material
+- if `affects` is omitted, the piece may use all other pieces as boolean input
+- `affects` must not contain duplicate ids
 
-Writers should omit `affects` from `add` pieces.
+Writers should omit `affects` from an `add` piece.
 
 ## 15. Ignored Pieces
 
-A piece is ignored if either of the following is true:
+A piece is ignored if any of the following is true:
 
 - the piece is point-defined and its effective size is degenerate
-- the piece is path-defined and every path segment contributes no generated or subtractive volume because of degenerate effective size or degenerate path shape
 - the piece is path-defined and has no non-degenerate path segments
+- the piece is path-defined and every non-degenerate path segment has degenerate evaluated size throughout
 
 Ignored pieces:
 
@@ -494,7 +497,7 @@ Ignored pieces:
 
 A valid SolidSKeleton geometry document must satisfy:
 
-- `pieces` exists
+- the document contains a `pieces` field
 - every piece has an `id`
 - ids are unique
 - ids start at `0`
@@ -513,8 +516,8 @@ A valid SolidSKeleton geometry document must satisfy:
 - each segment transition curve is monotone in `x`
 - `shape` is a defined shape
 - `mode`, if present, is a defined mode
-- `shape = ngon` has valid `sides`
-- `sides >= 3`
+- an `ngon` piece defines `sides`
+- `sides`, if present, is greater than or equal to `3`
 - all `affects` ids reference existing pieces
 
 ## 17. Implementation Notes

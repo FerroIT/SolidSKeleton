@@ -5,7 +5,7 @@ SolidSKeleton is an open geometry data format for representing skeleton-based so
 A document describes geometry as an ordered list of pieces. Each piece either generates material or subtracts from already-generated material. Pieces are either path-defined (two or more points, swept cross-section) or point-defined (one point, volumetric form).
 
 - Status: Current
-- Version: 0.3
+- version: 0.4
   
 This specification is in early development and is subject to change. It is not recommended for production use before version 1.0.
 

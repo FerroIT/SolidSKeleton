@@ -1,7 +1,7 @@
 # SSK Text Encoding Specification
 
 Status: Current
-Version: 0.3
+version: 0.4
 Applies to: `.ssk`
 
 ## 1. Purpose
@@ -9,6 +9,8 @@ Applies to: `.ssk`
 `.ssk` is the text encoding of the SolidSKeleton geometry model.
 
 This document defines how SolidSKeleton data is represented as text.
+
+The object structure defined here is also the shared structural reference for `.sskb`, except where `format/sskb/SPEC.md` defines binary-specific representation.
 
 Geometry meaning and validation are defined in:
 
@@ -42,7 +44,7 @@ A JSON Schema for structural validation is provided at `format/ssk/schema.json`.
 
 ## 4. Root Object
 
-The root object must be a mapping.
+The root object must be a mapping, not a sequence or scalar.
 
 Root fields:
 
@@ -158,7 +160,7 @@ List order must be preserved.
 
 ## 11. Properties
 
-`properties` is a user-defined metadata mapping.
+`properties` is encoded as a YAML mapping.
 
 `properties` may appear:
 
@@ -167,29 +169,28 @@ List order must be preserved.
 
 Property keys must be strings.
 
-Property values may be scalars, sequences, or nested mappings.
+Property values may be null, booleans, finite numbers, strings, sequences, or nested mappings.
 
-Duplicate keys are invalid.
-
-Standard behavior must not depend on `properties`.
-
-Implementations should preserve `properties` when possible.
+Geometry rules for `properties` are defined in `geometry/SPEC.md`.
 
 ## 12. Optional Fields
 
-If omitted:
+The following fields are optional:
 
-- `mode` defaults to `add`
-- `affects` means the piece may use all generated material
-- `properties` is treated as empty
-- `curve_in` is absent
-- `curve_out` is absent
-- point `size` uses the piece `size` at that point
-- point `rotation` uses the piece `rotation` at that point
-- `transition_in` is absent
-- `transition_out` is absent
+- root `version`
+- root `properties`
+- piece `sides`
+- piece `mode`
+- piece `affects`
+- piece `properties`
+- point `curve_in`
+- point `curve_out`
+- point `size`
+- point `rotation`
+- point `transition_in`
+- point `transition_out`
 
-If both `transition_in` and `transition_out` are absent for a segment, the transition is linear as defined in `geometry/SPEC.md`.
+Omitted optional fields decode as absent in the geometry model. Geometry defaults and interpretation are defined in `geometry/SPEC.md`.
 
 ## 13. Field Order
 
@@ -201,7 +202,7 @@ Recommended root order:
 2. `pieces`
 3. `properties`
 
-Recommended piece order:
+Recommended piece field order:
 
 1. `id`
 2. `points`
@@ -213,7 +214,7 @@ Recommended piece order:
 8. `affects`
 9. `properties`
 
-Recommended point order:
+Recommended point field order:
 
 1. `x`
 2. `y`
@@ -225,13 +226,13 @@ Recommended point order:
 8. `transition_in`
 9. `transition_out`
 
-Recommended vector order:
+Recommended vector field order:
 
 1. `x`
 2. `y`
 3. `z`
 
-Recommended transition vector order:
+Recommended transition vector field order:
 
 1. `x`
 2. `y`
@@ -251,8 +252,8 @@ A conforming `.ssk` parser must:
 - parse UTF-8 YAML input
 - require a root mapping
 - require `pieces`
-- preserve piece order
-- preserve point order
+- preserve `pieces` order
+- preserve `points` order
 - reject YAML anchors, aliases, explicit tags, and directives
 - reject duplicate mapping keys
 - reject unknown standard fields outside `properties`
@@ -288,11 +289,3 @@ If absent, no version is declared.
 Parsers must reject files with an unsupported major version.
 
 Parsers must not reject files with an unknown minor version.
-
-## 18. Binary Conversion Notes
-
-The `.ssk` text encoding can represent decimal values with more precision than the `.sskb` binary encoding.
-
-When writing `.sskb`, numeric values must be representable as finite IEEE 754 `f32` values. If a value cannot be represented as a finite `f32`, writers must reject the conversion.
-
-If a value is representable as `f32` but loses precision, writers may round to the nearest representable `f32` value. Implementations that require exact round-tripping should preserve the original `.ssk` text or store additional metadata in `properties`.
