@@ -462,6 +462,8 @@ A `subtract` piece removes overlapping generated material.
 
 A `subtract` piece never modifies piece definitions.
 
+If `affects` is present, it limits which other pieces an `subtract` piece may remove.
+
 ### 12.3 intersect
 
 An `intersect` piece contributes only the parts of its candidate volume that overlap candidate volume from another non-ignored `add` or `intersect` piece allowed by `affects`.
