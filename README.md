@@ -1,13 +1,16 @@
 # SolidSKeleton
 
-SolidSKeleton is an open geometry data format for representing skeleton-based solid geometry.
+SolidSKeleton is an open geometry data format for lightweight solid (CSG) modeling, designed to stay expressive without excessive structural or class overhead.
 
-A document describes geometry as an ordered list of pieces. Each piece either generates material or subtracts from already-generated material. Pieces are either path-defined (two or more points, swept cross-section) or point-defined (one point, volumetric form).
+SolidSKeleton works around 2 main principles, which is the user defined sets of points or singular point, with properties allowing for it to create or remove material, hence Solid(meterial)Skeleton(Points)
+
+A SolidSKeleton document `.ssk`/`.sskb` describes geometry as an ordered list of pieces. Each piece either generates material or subtracts from already-generated material. Pieces are either path-defined (two or more points, swept cross-section) or point-defined (one point, volumetric form).
 
 - Status: Current
-- version: 0.4
+- Version: 0.4
+- Author: Rogier Goossen
   
-This specification is in early development and is subject to change. It is not recommended for production use before version 1.0.
+This specification is in early development and is subject to change. The format should be considered beta until version 1.0.
 
 ## Specifications
 
