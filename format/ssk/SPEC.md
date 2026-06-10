@@ -1,7 +1,7 @@
 # SSK Text Encoding Specification
 
 Status: Current
-version: 0.4
+Version: 0.4
 Applies to: `.ssk`
 
 ## 1. Purpose
@@ -281,7 +281,7 @@ The value is a string in the form `major.minor`.
 For this version:
 
 ```text
-0.3
+0.4
 ```
 
 If absent, no version is declared.
