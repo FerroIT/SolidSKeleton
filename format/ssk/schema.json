@@ -18,18 +18,25 @@
   "$defs": {
     "piece": {
       "type": "object",
-      "required": ["id", "points", "rotation", "size", "shape"],
       "additionalProperties": false,
       "properties": {
         "id":       { "type": "integer", "minimum": 0 },
+        "from":     { "type": "integer", "minimum": 0 },
         "points":   { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/point" } },
         "rotation": { "$ref": "#/$defs/vector3" },
         "size":     { "$ref": "#/$defs/vector3" },
         "shape":    { "type": "string", "enum": ["circle", "ngon"] },
         "sides":    { "type": "integer", "minimum": 3 },
         "mode":     { "type": "string", "enum": ["add", "subtract", "intersect"] },
-        "affects":  { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "affects":  { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0 } },
         "properties": { "type": "object" }
+      },
+      "required": ["id"],
+      "if": {
+        "not": { "required": ["from"] }
+      },
+      "then": {
+        "required": ["id", "points", "rotation", "size", "shape"]
       }
     },
     "point": {

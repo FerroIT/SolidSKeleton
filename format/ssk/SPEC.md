@@ -61,6 +61,7 @@ Each item in `pieces` must be a mapping.
 Piece fields:
 
 - `id` : required integer
+- `from` : optional integer
 - `points` : required list
 - `rotation` : required vector3
 - `size` : required vector3
@@ -69,6 +70,8 @@ Piece fields:
 - `mode` : optional string
 - `affects` : optional list of integers
 - `properties` : optional mapping
+
+If `from` is present, piece fields other than `id` may be omitted.
 
 Unknown piece fields are invalid.
 
@@ -126,6 +129,7 @@ Boolean values are not valid numbers, even if a YAML parser represents booleans 
 The following fields must be integers:
 
 - `id`
+- `from`
 - `sides`
 - `affects[]`
 
@@ -179,6 +183,7 @@ The following fields are optional:
 
 - root `version`
 - root `properties`
+- piece `from`
 - piece `sides`
 - piece `mode`
 - piece `affects`
@@ -205,14 +210,15 @@ Recommended root order:
 Recommended piece field order:
 
 1. `id`
-2. `points`
-3. `rotation`
-4. `size`
-5. `shape`
-6. `sides`
-7. `mode`
-8. `affects`
-9. `properties`
+2. `from`
+3. `points`
+4. `rotation`
+5. `size`
+6. `shape`
+7. `sides`
+8. `mode`
+9. `affects`
+10. `properties`
 
 Recommended point field order:
 
@@ -261,6 +267,7 @@ A conforming `.ssk` parser must:
 - reject invalid scalar types
 - reject non-finite numeric values
 - reject structurally invalid documents
+- require `points`, `rotation`, `size`, and `shape` unless `from` is present
 
 Geometry validation is defined in `geometry/SPEC.md`.
 
@@ -287,5 +294,3 @@ For this version:
 If absent, no version is declared.
 
 Parsers must reject files with an unsupported major version.
-
-Parsers must not reject files with an unknown minor version.

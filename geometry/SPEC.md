@@ -55,6 +55,7 @@ Implementations should preserve `properties` when possible.
 Each piece contains:
 
 - `id`
+- optional `from`
 - `points`
 - `rotation`
 - `size`
@@ -65,6 +66,34 @@ Each piece contains:
 - optional `properties` mapping
 
 The piece `properties` field follows the same rules as document `properties`.
+
+If `from` is present, piece fields other than `id` may be omitted before inheritance resolution.
+
+### 3.1 Piece Inheritance
+
+A piece may include `from` to reference another piece by `id`.
+
+References may point to pieces that also use `from`.
+
+Inheritance is resolved before geometry validation and interpretation.
+
+Resolution is by `id`, not by piece order, and does not evaluate pieces.
+
+A piece is resolved by resolving its referenced piece, copying inheritable fields from it, then applying explicitly present fields.
+
+Rules:
+
+- `from` must reference an existing piece with a lower `id`
+- reference chains are valid
+- circular inheritance references are invalid
+- `id` is never inherited
+- `from` is not inherited
+- all other piece fields are inheritable
+- if `from` is present, any inheritable field may be omitted
+- omitted fields are inherited from the referenced piece
+- explicit fields replace inherited fields as whole values; nested values and lists are not merged
+- self-reference is invalid
+- the resolved piece must satisfy all normal validation rules
 
 ## 4. Coordinate System and Units
 
@@ -428,6 +457,10 @@ A `subtract` piece never modifies piece definitions.
 
 An `intersect` piece contributes only the parts of its candidate volume that overlap candidate volume from another non-ignored `add` or `intersect` piece allowed by `affects`.
 
+Intersect tests use candidate volumes, not the final contributed volume of other `intersect` pieces.
+
+Intersect evaluation is not recursive.
+
 Non-overlapping parts are ignored.
 
 An `intersect` piece never removes generated material.
@@ -447,6 +480,8 @@ Candidate volume is a piece volume before boolean operations.
 Each `add` piece contributes its full non-ignored volume.
 
 Each `intersect` piece contributes the volume defined in section 12.3.
+
+Mutual `intersect` references are valid and are evaluated from candidate volumes.
 
 ### 13.2 Subtract Phase
 
@@ -502,7 +537,10 @@ A valid SolidSKeleton geometry document must satisfy:
 - ids are unique
 - ids start at `0`
 - ids are contiguous
-- every piece has at least one point
+- if `from` is present, it references an existing piece with a lower `id`
+- self-reference is invalid
+- circular inheritance references are invalid
+- after inheritance resolution, every piece has at least one point
 - all point coordinates are finite numbers
 - all path curve control coordinates are finite numbers
 - all point size values are finite numbers
@@ -519,6 +557,7 @@ A valid SolidSKeleton geometry document must satisfy:
 - an `ngon` piece defines `sides`
 - `sides`, if present, is greater than or equal to `3`
 - all `affects` ids reference existing pieces
+- `affects` must not contain duplicate ids
 
 ## 17. Implementation Notes
 

@@ -17,8 +17,8 @@ Geometry meaning and validation are defined in `geometry/SPEC.md`.
 Binary-specific overrides:
 
 - the file version is stored in the header, not as a root `version` field
-- `mode` is stored explicitly
-- optional fields are represented by presence bytes or property blob length
+- `mode` is always encoded for non-inherited pieces; omitted `mode` is encoded as `add`
+- optional and conditionally omitted fields are represented by presence bytes or property blob length
 - `shape` and `mode` are stored as numeric enum values
 
 ## 2. Binary Basics
@@ -69,21 +69,43 @@ root_properties   property_blob
 
 ### 4.2 Piece
 
+Fields marked with `if` are only encoded when the condition is true.
+
+For pieces with `has_from != 0`, `field_mask` marks which fields are explicitly present:
+
+```text
+bit 0 = points
+bit 1 = rotation
+bit 2 = size
+bit 3 = shape
+bit 4 = sides
+bit 5 = mode
+bit 6 = affects
+bit 7 = properties
+```
+
+Piece layout:
+
 ```text
 id                 u32
-point_count        u32
-points             point[point_count]
-rotation           vector3
-size               vector3
-shape              u8
-has_sides          u8
-sides              u32, present only if has_sides != 0
-mode               u8
-has_affects        u8
-affects_count      u32, present only if has_affects != 0
-affects            u32[affects_count], present only if has_affects != 0
-piece_properties   property_blob
+has_from           u8
+from               u32, if has_from != 0
+field_mask         u16, if has_from != 0
+point_count        u32, if has_from == 0 or field_mask bit 0 is set
+points             point[point_count], if has_from == 0 or field_mask bit 0 is set
+rotation           vector3, if has_from == 0 or field_mask bit 1 is set
+size               vector3, if has_from == 0 or field_mask bit 2 is set
+shape              u8, if has_from == 0 or field_mask bit 3 is set
+has_sides          u8, if has_from == 0
+sides              u32, if has_from == 0 and has_sides != 0, or field_mask bit 4 is set
+mode               u8, if has_from == 0 or field_mask bit 5 is set
+has_affects        u8, if has_from == 0
+affects_count      u32, if has_from == 0 and has_affects != 0, or field_mask bit 6 is set
+affects            u32[affects_count], if has_from == 0 and has_affects != 0, or field_mask bit 6 is set
+piece_properties   property_blob, if has_from == 0 or field_mask bit 7 is set
 ```
+
+Bits 8 through 15 are reserved and must be zero.
 
 ### 4.3 Point
 
@@ -180,6 +202,7 @@ A conforming `.sskb` parser must:
 - reject count values that exceed remaining input length
 - reject truncated input
 - reject invalid presence-controlled layouts
+- reject non-zero reserved `field_mask` bits
 - reject malformed property blobs if property parsing is attempted
 - consume exactly the bytes required by the encoded values
 
