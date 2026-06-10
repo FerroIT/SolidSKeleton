@@ -169,7 +169,9 @@ count      u32
 items      item[count]
 ```
 
-Array order must be preserved.
+Array order must be preserved for round-tripping.
+
+Geometry semantics do not depend on `pieces` array order; piece order is defined by ascending `id`.
 
 ## 7. Properties
 
@@ -195,7 +197,7 @@ A conforming `.sskb` parser must:
 - verify magic bytes
 - verify version compatibility
 - read all multi-byte values as little-endian
-- preserve `pieces` order
+- preserve `pieces` array order when round-tripping
 - preserve `points` order
 - reject invalid enum values
 - reject non-finite `f32` values

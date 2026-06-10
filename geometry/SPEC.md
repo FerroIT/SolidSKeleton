@@ -32,7 +32,9 @@ A SolidSKeleton document contains:
 
 ### 2.1 pieces
 
-`pieces` is an ordered list of piece objects.
+`pieces` is a list of piece objects.
+
+Piece file order is not significant. When an ordered piece sequence is needed, pieces are read in ascending `id` order.
 
 A document may contain zero or more pieces.
 
@@ -119,14 +121,21 @@ Rules:
 - ids are unique within the document
 - ids start at `0`
 - ids are contiguous
+- pieces may appear in any file order
 
-Valid id sequence:
+Valid ids:
+
+```text
+0, 1, 3, 2
+```
+
+These are read as:
 
 ```text
 0, 1, 2, 3
 ```
 
-Invalid id sequence:
+Invalid ids:
 
 ```text
 0, 2, 3

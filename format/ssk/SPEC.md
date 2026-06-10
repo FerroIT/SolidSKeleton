@@ -160,7 +160,9 @@ The following fields are lists:
 - `points`
 - `affects`
 
-List order must be preserved.
+List order must be preserved for round-tripping.
+
+Geometry semantics do not depend on `pieces` file order; piece order is defined by ascending `id`.
 
 ## 11. Properties
 
@@ -258,7 +260,7 @@ A conforming `.ssk` parser must:
 - parse UTF-8 YAML input
 - require a root mapping
 - require `pieces`
-- preserve `pieces` order
+- preserve `pieces` file order when round-tripping
 - preserve `points` order
 - reject YAML anchors, aliases, explicit tags, and directives
 - reject duplicate mapping keys
