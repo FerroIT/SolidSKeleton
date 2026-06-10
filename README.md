@@ -7,7 +7,7 @@ SolidSKeleton works around 2 main principles, which is the user defined sets of 
 A SolidSKeleton document `.ssk`/`.sskb` describes geometry as an ordered list of pieces. Each piece either generates material or subtracts from already-generated material. Pieces are either path-defined (two or more points, swept cross-section) or point-defined (one point, volumetric form).
 
 - Status: Current
-- Version: 0.4
+- Version: 0.5
 - Author: Rogier Goossen
   
 This specification is in early development and is subject to change. The format should be considered beta until version 1.0.
