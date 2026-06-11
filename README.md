@@ -20,6 +20,10 @@ Read in order:
 2. [format/ssk/SPEC.md](format/ssk/SPEC.md) : `.ssk` text encoding
 3. [format/sskb/SPEC.md](format/sskb/SPEC.md) : `.sskb` binary encoding
 
+## Reference
+
+See [reference/](reference/) (Python)
+
 ## Examples
 
 See [examples/](examples/).
