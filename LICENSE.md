@@ -10,8 +10,8 @@ CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
 
 ---
 
-## Examples (`examples/`)
+## Examples & Refrences (`examples/`, `refrence/`)
 
-The content in the `examples/` directory is licensed under the **MIT License**.
+The content in the `examples/` and `refrence/` directories are licensed under the **MIT License**.
 
 MIT https://opensource.org/license/mit
