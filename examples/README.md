@@ -1,15 +1,18 @@
 # SolidSKeleton Examples
 
-This directory contains folders example `.ssk` files that demonstrate valid SolidSKeleton documents.
+This directory contains folders with example `.ssk` files that demonstrate valid SolidSKeleton documents.
 
-## `ladder.ssk`
-An example of a ladder with angled steps
+All files in this example directory have been parsed through the reference scrips in `/reference`, and rendererd in [gltf viewer](https://gltf-viewer.donmccurdy.com/) by Don McCurdy.
 
-- 14 steps angled
-- 2 straight squared upright suports
+## `ladder.ssk` 
+An example of a ladder with 14 steps
 
 The ladder describes the use of the `from` class strongly.
 
-<img src="ladder/ladder.png" alt="tube.png" width="128"/>
+*Upright*
+<img src="ladder/ladder_upright.png" alt="ladder_upright.png" width="128"/>
+
+*Upclose*
+<img src="ladder/ladder_upclose.png" alt="ladder_upclose.png" width="256"/>
 
 ---

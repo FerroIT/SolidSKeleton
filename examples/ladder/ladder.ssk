@@ -35,10 +35,6 @@ pieces:
       - x: 425
         y: 0
         z: 470
-    rotation:
-      x: 0
-      y: 90
-      z: 0
     size:
       x: 15
       y: 15
