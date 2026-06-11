@@ -1,15 +1,15 @@
 # SolidSKeleton Examples
 
-This directory contains example `.ssk` files that demonstrate valid SolidSKeleton documents.
+This directory contains folders example `.ssk` files that demonstrate valid SolidSKeleton documents.
 
-## `tube.ssk`
-An upright tube made from one additive cylinder and one subtractive cylinder.
+## `ladder.ssk`
+An example of a ladder with angled steps
 
-- length: 80 mm
-- outer radius: 20 mm
-- inner radius: 14 mm
-- wall thickness: 6 mm
+- 14 steps angled
+- 2 straight squared upright suports
 
-<img src="tube.png" alt="tube.png" width="128"/>
+The ladder describes the use of the `from` class strongly.
+
+<img src="ladder/ladder.png" alt="tube.png" width="128"/>
 
 ---

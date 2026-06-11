@@ -1,0 +1,177 @@
+version: "0.7"
+
+pieces:
+
+  - id: 0
+    points:
+      - x: 0
+        y: 0
+        z: 0
+      - x: 0
+        y: 0
+        z: 6770
+    size:
+      x: 25
+      y: 25
+      z: 0
+    shape: ngon
+    sides: 4
+
+  - id: 1
+    from: 0
+    points:
+      - x: 425
+        y: 0
+        z: 0
+      - x: 425
+        y: 0
+        z: 6770
+
+  - id: 2
+    points:
+      - x: 0
+        y: 0
+        z: 470
+      - x: 425
+        y: 0
+        z: 470
+    rotation:
+      x: 0
+      y: 90
+      z: 0
+    size:
+      x: 15
+      y: 15
+      z: 0
+    shape: ngon
+    sides: 4
+
+  - id: 3
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 954.615
+      - x: 425
+        y: 0
+        z: 954.615
+
+  - id: 4
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 1439.231
+      - x: 425
+        y: 0
+        z: 1439.231
+
+  - id: 5
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 1923.846
+      - x: 425
+        y: 0
+        z: 1923.846
+
+  - id: 6
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 2408.462
+      - x: 425
+        y: 0
+        z: 2408.462
+
+  - id: 7
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 2893.077
+      - x: 425
+        y: 0
+        z: 2893.077
+
+  - id: 8
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 3377.692
+      - x: 425
+        y: 0
+        z: 3377.692
+
+  - id: 9
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 3862.308
+      - x: 425
+        y: 0
+        z: 3862.308
+
+  - id: 10
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 4346.923
+      - x: 425
+        y: 0
+        z: 4346.923
+
+  - id: 11
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 4831.538
+      - x: 425
+        y: 0
+        z: 4831.538
+
+  - id: 12
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 5316.154
+      - x: 425
+        y: 0
+        z: 5316.154
+
+  - id: 13
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 5800.769
+      - x: 425
+        y: 0
+        z: 5800.769
+
+  - id: 14
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 6285.385
+      - x: 425
+        y: 0
+        z: 6285.385
+
+  - id: 15
+    from: 2
+    points:
+      - x: 0
+        y: 0
+        z: 6770
+      - x: 425
+        y: 0
+        z: 6770
