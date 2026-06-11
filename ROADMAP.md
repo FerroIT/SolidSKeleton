@@ -16,3 +16,8 @@ All roadmap items under a version have to be completed for that version bump to 
 ## 🎉 v0.6 -> v0.7
 
 - [x] Add refrence implementation, documentation and parsing documents
+
+## v0.6 -> v0.7
+
+- [ ] Fill the example subfolder with more high quality examples
+- [ ] t.b.d
