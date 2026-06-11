@@ -171,8 +171,8 @@ def write(doc: dict) -> bytes:
 
     # header
     w.raw(_MAGIC)
-    # parse version string, default to 0.6
-    ver = doc.get('version', '0.6')
+    # parse version string, default to 0.7
+    ver = doc.get('version', '0.7')
     parts = ver.split('.')
     w.u16(int(parts[0]))
     w.u16(int(parts[1]))
