@@ -75,8 +75,8 @@ def _ellipsoid(c, sx, sy, sz, R, n):
         a0, b0 = 1 + i * n_lon, 1 + (i + 1) * n_lon
         for j in range(n_lon):
             jn = (j + 1) % n_lon
-            fs.append([a0 + j, a0 + jn, b0 + jn])
-            fs.append([a0 + j, b0 + jn, b0 + j])
+            fs.append([a0 + j, b0 + j, a0 + jn])
+            fs.append([a0 + jn, b0 + j, b0 + jn])
     bot = 1 + (n_lat - 1) * n_lon
     last = 1 + (n_lat - 2) * n_lon
     for j in range(n_lon):
