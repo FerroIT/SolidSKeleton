@@ -63,7 +63,7 @@ Piece fields:
 - `id` : required integer
 - `from` : optional integer
 - `points` : required list
-- `rotation` : required vector3
+- `rotation` : optional vector3
 - `size` : required vector3
 - `shape` : required string
 - `sides` : optional integer
@@ -186,6 +186,7 @@ The following fields are optional:
 - root `version`
 - root `properties`
 - piece `from`
+- piece `rotation`
 - piece `sides`
 - piece `mode`
 - piece `affects`
@@ -198,6 +199,8 @@ The following fields are optional:
 - point `transition_out`
 
 Omitted optional fields decode as absent in the geometry model. Geometry defaults and interpretation are defined in `geometry/SPEC.md`.
+
+In particular, omitted piece `rotation` is valid and has an effective geometry rotation of `x: 0, y: 0, z: 0` unless overridden by point `rotation`.
 
 ## 13. Field Order
 
@@ -269,7 +272,7 @@ A conforming `.ssk` parser must:
 - reject invalid scalar types
 - reject non-finite numeric values
 - reject structurally invalid documents
-- require `points`, `rotation`, `size`, and `shape` unless `from` is present
+- require `points`, `size`, and `shape` unless `from` is present
 
 Geometry validation is defined in `geometry/SPEC.md`.
 

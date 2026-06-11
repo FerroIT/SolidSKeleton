@@ -36,7 +36,7 @@
         "not": { "required": ["from"] }
       },
       "then": {
-        "required": ["id", "points", "rotation", "size", "shape"]
+        "required": ["id", "points", "size", "shape"]
       }
     },
     "point": {

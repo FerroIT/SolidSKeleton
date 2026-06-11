@@ -47,12 +47,13 @@ def validate(doc: dict):
 
         if 'points' not in piece or len(piece['points']) < 1:
             raise SSKError(f"piece {pid}: must have at least one point after resolution")
-        for req in ('rotation', 'size', 'shape'):
+        for req in ('size', 'shape'):
             if req not in piece:
                 raise SSKError(f"piece {pid}: missing '{req}' after resolution")
 
         # rotation finiteness
-        _finite_vec3(piece['rotation'], f"piece {pid} rotation")
+        if 'rotation' in piece:
+            _finite_vec3(piece['rotation'], f"piece {pid} rotation")
 
         # size finiteness + non-negative
         _finite_vec3(piece['size'], f"piece {pid} size")

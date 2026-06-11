@@ -113,7 +113,13 @@ def _write_piece(w: _Writer, piece: dict):
             _write_point(w, pt)
 
     # rotation
-    if not has_from or 'rotation' in piece:
+    if not has_from:
+        if 'rotation' in piece:
+            w.u8(1)
+            w.vec3(piece['rotation'])
+        else:
+            w.u8(0)
+    elif 'rotation' in piece:
         w.vec3(piece['rotation'])
 
     # size

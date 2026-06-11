@@ -124,7 +124,7 @@ def _read_piece(r: _Reader) -> dict:
         if fm & 0xFF00:
             raise SSKError(f"piece {piece['id']}: reserved field_mask bits set")
     else:
-        fm = 0xFF  # all fields present
+        fm = 0xFD  # all fields except rotation are always present
 
     # points
     if not has_from or _bit(fm, _B_POINTS):
@@ -132,7 +132,10 @@ def _read_piece(r: _Reader) -> dict:
         piece['points'] = [_read_point(r) for _ in range(n)]
 
     # rotation
-    if not has_from or _bit(fm, _B_ROTATION):
+    if not has_from:
+        if r.u8():
+            piece['rotation'] = r.vec3()
+    elif _bit(fm, _B_ROTATION):
         piece['rotation'] = r.vec3()
 
     # size

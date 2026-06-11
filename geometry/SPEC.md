@@ -59,7 +59,7 @@ Each piece contains:
 - `id`
 - optional `from`
 - `points`
-- `rotation`
+- optional `rotation`
 - `size`
 - `shape`
 - optional `sides`
@@ -164,7 +164,7 @@ Rules:
 - point positions are in world space
 - point coordinates must be finite numbers
 - if point `size` is omitted, the piece `size` is used at that point
-- if point `rotation` is omitted, the piece `rotation` is used at that point
+- if point `rotation` is omitted, the piece `rotation` is used at that point, or zero rotation if piece `rotation` is also omitted
 
 ## 7. Path Curve Controls
 
@@ -300,11 +300,13 @@ Implementations may use a numeric tolerance when testing whether a projected axi
 
 Rotation defines the orientation of the local axes, including size axes and `ngon` side orientation.
 
+If `rotation` is omitted on a piece and at the evaluated point, the effective rotation is `x: 0, y: 0, z: 0`.
+
 ### 9.2 Point Rotation Overrides
 
 Each point may define `rotation`.
 
-The effective rotation at a point is the point `rotation` if present, otherwise the piece `rotation`.
+The effective rotation at a point is the point `rotation` if present, otherwise the piece `rotation` if present, otherwise `(0, 0, 0)`.
 
 For a point-defined piece, the effective rotation of the only point follows the same rule.
 

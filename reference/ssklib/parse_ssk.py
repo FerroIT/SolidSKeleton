@@ -182,7 +182,7 @@ def _check_piece(piece):
     if has_from:
         _require_int(piece['from'], 'from')
     else:
-        for req in ('points', 'rotation', 'size', 'shape'):
+        for req in ('points', 'size', 'shape'):
             if req not in piece:
                 raise SSKError(f"piece {pid}: missing required field '{req}'")
 

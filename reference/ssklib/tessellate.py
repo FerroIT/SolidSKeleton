@@ -30,7 +30,7 @@ def _eff_size(pt: dict, piece: dict) -> tuple:
 
 
 def _eff_rot(pt: dict, piece: dict) -> tuple:
-    r = pt.get('rotation', piece['rotation'])
+    r = pt.get('rotation', piece.get('rotation', {'x': 0.0, 'y': 0.0, 'z': 0.0}))
     return (float(r['x']), float(r['y']), float(r['z']))
 
 

@@ -18,6 +18,7 @@ Binary-specific overrides:
 
 - the file version is stored in the header, not as a root `version` field
 - `mode` is always encoded for non-inherited pieces; omitted `mode` is encoded as `add`
+- `rotation` is optional; omitted piece `rotation` has an effective geometry rotation of `x: 0, y: 0, z: 0`
 - optional and conditionally omitted fields are represented by presence bytes or property blob length
 - `shape` and `mode` are stored as numeric enum values
 
@@ -93,7 +94,8 @@ from               u32, if has_from != 0
 field_mask         u16, if has_from != 0
 point_count        u32, if has_from == 0 or field_mask bit 0 is set
 points             point[point_count], if has_from == 0 or field_mask bit 0 is set
-rotation           vector3, if has_from == 0 or field_mask bit 1 is set
+has_rotation       u8, if has_from == 0
+rotation           vector3, if has_from == 0 and has_rotation != 0, or field_mask bit 1 is set
 size               vector3, if has_from == 0 or field_mask bit 2 is set
 shape              u8, if has_from == 0 or field_mask bit 3 is set
 has_sides          u8, if has_from == 0
