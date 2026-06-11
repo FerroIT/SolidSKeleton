@@ -12,3 +12,7 @@ All roadmap items under a version have to be completed for that version bump to 
 ## 🎉 v0.5 -> v0.6
 
 - [x] Removal of file order rules, replacing to be more flexible, allowing mixed id's over the file, but deciding the order based on the id's index.  e.g. [1, 2, ***4***, ***3***] will now be allowed, read like [1, 2, 3, 4]
+
+## v0.6 -> v0.7
+
+- [ ] Add refrence implementation, documentation and parsing documents
