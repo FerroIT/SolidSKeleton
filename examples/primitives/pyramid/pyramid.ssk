@@ -1,0 +1,25 @@
+version: "0.7"
+
+pieces:
+  - id: 0
+    points:
+      - x: 0
+        y: 0
+        z: 0
+      - x: 0
+        y: 0
+        z: 100
+        size:
+          x: 0
+          y: 0
+          z: 0
+    size:
+      x: 70.710678
+      y: 70.710678
+      z: 0
+    rotation:
+      x: 0
+      y: 0
+      z: 45
+    shape: ngon
+    sides: 4
