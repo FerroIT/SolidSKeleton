@@ -89,3 +89,12 @@ ssk file is *346 Bytes* and the sskb is *110 bytes*
 <img src="primitives/pyramid/pyramid.png" alt="pyramid.png" width="128"/>
 
 ---
+
+## `knot.ssk` / `knot.sskb`
+A trefoil knot with smooth path and curved controls
+
+ssk file is *35106 Bytes* and the sskb is *8128 bytes*
+
+The knot demonstrates complex path-defined geometry with extensive curve controls.
+
+<img src="knot/knot.png" alt="knot.png" width="128"/>

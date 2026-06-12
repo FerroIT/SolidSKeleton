@@ -1,4 +1,5 @@
-version: '0.7'
+version: "0.7"
+
 pieces:
 - id: 0
   points:
