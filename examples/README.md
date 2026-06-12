@@ -6,14 +6,14 @@ All files in this example directory have been parsed through the reference scrip
 
 ---
 
-## `scg_cube.ssk` / `scg_cube.sskb`
-An SCG example cube using add, sutract and intersect
+## `csg_cube.ssk` / `csg_cube.sskb`
+An csg example cube using add, sutract and intersect
 
 ssk file is  *943 Bytes* and the sskb is *314 bytes*
 
-The CSG cube uses many of the core SCG princeples
+The CSG cube uses many of the core csg principles
 
-<img src="scg_cube/scg_cube.png" alt="scg_cube.png" width="128"/>
+<img src="csg_cube/csg_cube.png" alt="csg_cube.png" width="128"/>
 
 ---
 
