@@ -175,9 +175,15 @@ def _seg(points, i, piece):
     steps = _PATH_STEPS if not linear else max(1, _PATH_STEPS // 4)
 
     def pos(u):
+        if linear:
+            return (1.0 - u) * p0 + u * p3
         return cubic_bezier(p0, p1, p2, p3, u)
 
+    _lin_dir = p3 - p0
+
     def tan(u):
+        if linear:
+            return _lin_dir
         d = cubic_bezier_deriv(p0, p1, p2, p3, u)
         if np.linalg.norm(d) < 1e-12:
             for dt in (.01, -.01, .05, -.05, .1, -.1):
@@ -218,7 +224,8 @@ def _eval_path(segs, piece, cn):
                 continue
             t = normalize(t_raw)
             sz = seg['size'](u)
-            if sum(1 for v in (sz[0], sz[1]) if v == 0) >= 2:
+            is_endpoint = (si == 0 and step == 0) or (si == len(segs) - 1 and step == seg['n'])
+            if not is_endpoint and sum(1 for v in (sz[0], sz[1]) if v == 0) >= 2:
                 continue
 
             Rr = rotation_matrix_xyz(*seg['rot'](u))
