@@ -9,7 +9,7 @@ By having a very lightly typed, easily readable format, files can easily be unde
 A SolidSKeleton document `.ssk`/`.sskb` describes geometry as a list of pieces ordered by `id` for interpretation. Each piece either generates material or subtracts from generated material. Pieces are either path-defined (two or more points, swept cross-section) or point-defined (one point, volumetric form).
 
 - Status: Current
-- Version: 0.7
+- Version: 0.8
 - Author: Rogier Goossen
   
 This specification is in early development and is subject to change. The format should be considered beta until version 1.0.
