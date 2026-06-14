@@ -21,3 +21,14 @@ All roadmap items under a version have to be completed for that version bump to 
 
 - [x] Fill the example subfolder with more high quality examples
 - [x] Make rotation optional, default to 0,0,0
+
+## v0.8 -> v0.9
+
+- [ ] Add more languages as a refrence
+- [ ] Cleanup python implementation in refrence
+- [ ] Fix typos and structural/syntax issues in SPEC files
+
+## v0.9 -> v1.0.rc1
+
+- [ ] Testing suite, better validation of text and binary format.
+- [ ] t.b.d
