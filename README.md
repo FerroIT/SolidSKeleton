@@ -1,4 +1,6 @@
-# SolidSKeleton
+# SolidSKeleton 
+*<sup>[Python package](https://pypi.org/project/ssk) .. [FerroIT website](https://www.ferroit.com/)</sup>*
+
 
 SolidSKeleton is an open geometry data format for lightweight solid (CSG) modeling, designed to stay expressive without excessive structural or class overhead.
 
