@@ -22,11 +22,11 @@ All roadmap items under a version must be completed before that version bump can
 - [x] Fill the example subfolder with more high-quality examples
 - [x] Make rotation optional, default to 0,0,0
 
-## v0.8 -> v0.9
+## 🎉 v0.8 -> v0.9
 
 - [x] Add more languages as a reference
 - [x] Clean up Python implementation in reference
-- [ ] Fix typos and structural/syntax issues in SPEC files
+- [x] Fix typos and structural/syntax issues in SPEC files
 
 ## v0.9 -> v1.0.rc1
 

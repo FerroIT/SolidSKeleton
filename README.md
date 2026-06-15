@@ -15,7 +15,7 @@ The format is lightly typed and enforces strict structural constraints, allowing
 ### Project Status
 
 - Status: Current
-- Version: 0.8
+- Version: 0.9
 - Author: Rogier Goossen
   
 This specification is in early development and is subject to change. The format should be considered beta until version 1.0.
