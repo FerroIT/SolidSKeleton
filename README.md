@@ -1,4 +1,4 @@
-# SolidSKeleton 
+# SolidSKeleton
 *<sup>[Python package](https://pypi.org/project/ssk) .. [NPM package](https://www.npmjs.com/package/@ferroit/ssk) .. [FerroIT website](https://www.ferroit.com/)</sup>*
 
 
@@ -24,9 +24,9 @@ This specification is in early development and is subject to change. The format 
 
 Read in order:
 
-1. [geometry/SPEC.md](geometry/SPEC.md) : geometry model and semantics
-2. [format/ssk/SPEC.md](format/ssk/SPEC.md) : `.ssk` text encoding
-3. [format/sskb/SPEC.md](format/sskb/SPEC.md) : `.sskb` binary encoding
+1. [geometry/SPEC.md](geometry/SPEC.md): geometry model and semantics
+2. [format/ssk/SPEC.md](format/ssk/SPEC.md): `.ssk` text encoding
+3. [format/sskb/SPEC.md](format/sskb/SPEC.md): `.sskb` binary encoding
 
 ## Reference
 
@@ -47,4 +47,3 @@ See [LICENSE.md](LICENSE.md).
 ---
 
 <img width="256" alt="FerroIT logo" src="https://github.com/user-attachments/assets/7d4e1963-68a4-4a04-96f3-b64f8c4c1977"/>
-
