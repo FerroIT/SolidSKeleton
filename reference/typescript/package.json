@@ -1,0 +1,54 @@
+{
+  "name": "@ferroit/ssk",
+  "version": "0.8.1",
+  "description": "SolidSKeleton tessellation and format tools",
+  "type": "module",
+  "license": "MIT",
+  "author": "Rogier Goossen",
+  "keywords": [
+    "3d",
+    "csg",
+    "geometry",
+    "solid modeling",
+    "solidskeleton"
+  ],
+  "homepage": "https://github.com/FerroIT/SolidSKeleton",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FerroIT/SolidSKeleton.git",
+    "directory": "reference/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/FerroIT/SolidSKeleton/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json",
+    "test": "npm run typecheck && tsx test/run-tests.ts",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "manifold-3d": "^3.5.1",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

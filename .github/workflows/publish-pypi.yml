@@ -9,31 +9,8 @@ permissions:
 
 jobs:
   test:
-    name: Test Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.10', '3.13']
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-
-      - name: Install package
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e reference
-
-      - name: Run tests
-        run: |
-          python -m unittest discover -s reference/tests
-          python -m unittest discover -s reference/tests -p test_examples.py
+    name: Test
+    uses: ./.github/workflows/test.yml
 
   build:
     name: Build distributions
@@ -53,7 +30,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install build twine
-          python -m build --outdir dist reference
+          python -m build --outdir dist reference/python
           python -m twine check dist/*
 
       - name: Upload distributions

@@ -28,7 +28,7 @@ Read in order:
 
 ## Reference
 
-See [reference/](reference/) (Python)
+See [reference/](reference/).
 
 ## Examples
 

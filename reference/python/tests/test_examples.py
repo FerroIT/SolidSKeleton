@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 REFERENCE_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = REFERENCE_ROOT.parent
+REPO_ROOT = REFERENCE_ROOT.parents[1]
 EXAMPLES_ROOT = REPO_ROOT / 'examples'
 sys.path.insert(0, str(REFERENCE_ROOT))
 
