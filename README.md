@@ -43,3 +43,8 @@ See [ROADMAP.md](ROADMAP.md).
 ## License
 
 See [LICENSE.md](LICENSE.md).
+
+---
+
+<img width="256" alt="FerroIT logo" src="https://github.com/user-attachments/assets/7d4e1963-68a4-4a04-96f3-b64f8c4c1977"/>
+
