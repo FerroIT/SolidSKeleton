@@ -1,6 +1,6 @@
 {
   "name": "@ferroit/ssk",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "SolidSKeleton tessellation and format tools",
   "type": "module",
   "license": "MIT",
@@ -43,7 +43,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "manifold-3d": "^3.5.1",
+    "manifold-3d": "3.2.1",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
