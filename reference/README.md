@@ -1,17 +1,49 @@
-# SolidSKeleton Reference Implementations
+# SolidSKeleton Python Reference
 
-Python 3.10+ `pip install -r requirements.txt`
+Python 3.10+.
 
-## Tools
+```sh
+pip install ssk
+```
 
-| Script | Input | Output |
-|---|---|---|
-| `ssk_validate.py` | `.ssk` | validation report |
-| `ssk2gltf.py` | `.ssk` | `.glb` / `.gltf` |
-| `ssk2sskb.py` | `.ssk` | `.sskb` |
-| `sskb2gltf.py` | `.sskb` | `.glb` / `.gltf` |
+For local development from this directory:
 
-## Library (`ssklib/`)
+```sh
+pip install -e .
+```
+
+## Commands
+
+```sh
+ssk validate model.ssk
+ssk convert model.ssk model.sskb
+ssk convert model.ssk model.glb
+ssk convert model.ssk model.glb --resolution 64
+ssk convert model.sskb model.glb
+ssk inspect model.sskb
+```
+
+From this directory without installing:
+
+```sh
+python -m ssk validate model.ssk
+```
+
+## Library
+
+```py
+from ssklib import convert, inspect_file, load, validate_file
+
+convert("model.ssk", "model.glb", resolution=64)
+```
+
+Lower-level functions:
+
+```py
+from ssklib import parse_ssk, parse_sskb, resolve, validate, write_sskb
+```
+
+## Modules
 
 | Module | Spec |
 |---|---|
@@ -20,24 +52,30 @@ Python 3.10+ `pip install -r requirements.txt`
 | `write_sskb.py` | [format/sskb/SPEC.md](../format/sskb/SPEC.md) |
 | `resolve.py` | [geometry/SPEC.md](../geometry/SPEC.md) 3.1 |
 | `validate.py` | [geometry/SPEC.md](../geometry/SPEC.md) 16 |
-| `tessellate.py` | [geometry/SPEC.md](../geometry/SPEC.md) 6–11 |
-| `boolean.py` | [geometry/SPEC.md](../geometry/SPEC.md) 12–14 |
+| `tessellate.py` | [geometry/SPEC.md](../geometry/SPEC.md) 6-11 |
+| `boolean.py` | [geometry/SPEC.md](../geometry/SPEC.md) 12-14 |
 | `vecmath.py` | [geometry/SPEC.md](../geometry/SPEC.md) 4, 7, 9, 10 |
 | `gltf.py` | [glTF 2.0](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html) |
 | `error.py` | - |
 
-## Usage
+## Tests
+
+From the repository root:
 
 ```sh
-python ssk_validate.py model.ssk              # validation report
-python ssk2gltf.py model.ssk -o model.glb     # .ssk -> .glb
-python ssk2gltf.py model.ssk --format gltf    # .ssk -> .gltf + .bin
-python ssk2sskb.py model.ssk -o model.sskb    # .ssk -> .sskb
-python sskb2gltf.py model.sskb -o model.glb   # .sskb -> .glb
+python -m unittest discover -s reference\tests
+python -m unittest discover -s reference\tests -p test_examples.py
+```
+
+From this directory:
+
+```sh
+python -m unittest discover -s tests
+python -m unittest discover -s tests -p test_examples.py
 ```
 
 ## Notes
 
-- Tessellation is fixed at 32 segments; the spec does not mandate exact tessellation.
+- Mesh output defaults to resolution 32.
 - CSG uses [trimesh](https://trimesh.org/) with [Manifold](https://github.com/elalish/manifold).
 - glTF output uses unindexed meshes with flat per-face normals.

@@ -1,12 +1,13 @@
 """CSG boolean evaluation."""
 
-import sys
-
-import numpy as np
 import trimesh
 
+from .error import SSKError
 
-def evaluate(pieces: list, meshes: dict) -> trimesh.Trimesh:
+
+def evaluate(pieces: list, meshes: dict, *, strict: bool = True) -> trimesh.Trimesh:
+
+    pieces = sorted(pieces, key=lambda piece: piece['id'])
 
     active = {}
     for p in pieces:
@@ -18,14 +19,15 @@ def evaluate(pieces: list, meshes: dict) -> trimesh.Trimesh:
         return trimesh.Trimesh()
 
     mode_of = {}
-    add_ids, isect_ids, sub_ids = [], [], []
+    add_ids = []
     for p in pieces:
         pid = p['id']
         if pid not in active:
             continue
         m = p.get('mode', 'add')
         mode_of[pid] = m
-        {'add': add_ids, 'intersect': isect_ids, 'subtract': sub_ids}[m].append(pid)
+        if m == 'add':
+            add_ids.append(pid)
 
 
     contrib = {pid: active[pid] for pid in add_ids}
@@ -43,11 +45,11 @@ def evaluate(pieces: list, meshes: dict) -> trimesh.Trimesh:
             continue
         union = targets[0]
         for t in targets[1:]:
-            union = _op(union, t, 'union')
+            union = _op(union, t, 'union', strict=strict)
             if union is None:
                 break
         if union is not None:
-            res = _op(active[pid], union, 'intersection')
+            res = _op(active[pid], union, 'intersection', strict=strict)
             if res is not None and len(res.faces) > 0:
                 contrib[pid] = res
 
@@ -63,7 +65,7 @@ def evaluate(pieces: list, meshes: dict) -> trimesh.Trimesh:
         for cid in list(contrib):
             if aff is not None and cid not in aff:
                 continue
-            res = _op(contrib[cid], active[pid], 'difference')
+            res = _op(contrib[cid], active[pid], 'difference', strict=strict)
             if res is not None:
                 if len(res.faces) > 0:
                     contrib[cid] = res
@@ -77,13 +79,13 @@ def evaluate(pieces: list, meshes: dict) -> trimesh.Trimesh:
     ids = sorted(contrib)
     result = contrib[ids[0]]
     for cid in ids[1:]:
-        r = _op(result, contrib[cid], 'union')
+        r = _op(result, contrib[cid], 'union', strict=strict)
         if r is not None:
             result = r
     return result
 
 
-def _op(a: trimesh.Trimesh, b: trimesh.Trimesh, op: str):
+def _op(a: trimesh.Trimesh, b: trimesh.Trimesh, op: str, *, strict: bool):
     fn = {'union': trimesh.boolean.union,
           'intersection': trimesh.boolean.intersection,
           'difference': trimesh.boolean.difference}[op]
@@ -92,6 +94,9 @@ def _op(a: trimesh.Trimesh, b: trimesh.Trimesh, op: str):
     except Exception:
         try:
             return fn([a, b])
-        except Exception:
-            print(f"warning: boolean {op} failed, result may be inaccurate", file=sys.stderr)
+        except Exception as second_error:
+            if strict:
+                raise SSKError(
+                    f"boolean {op} failed with manifold and fallback engines"
+                ) from second_error
             return trimesh.util.concatenate([a, b]) if op == 'union' else a

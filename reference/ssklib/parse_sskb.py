@@ -6,7 +6,7 @@ import struct
 import yaml
 
 from .error import SSKError
-from .parse_ssk import _StrictLoader, _check_properties
+from .parse_ssk import _StrictLoader, _check_properties, _check_root
 
 _MAGIC = b'SSKB'
 _SHAPES = {0: 'circle', 1: 'ngon'}
@@ -22,6 +22,10 @@ _B_MODE       = 5
 _B_AFFECTS    = 6
 _B_PROPERTIES = 7
 
+_MIN_PIECE_BYTES = 11
+_MIN_POINT_BYTES = 18
+_ROOT_PROPERTY_LENGTH_BYTES = 4
+
 class _Reader:
     __slots__ = ('_buf', '_pos')
 
@@ -32,6 +36,16 @@ class _Reader:
     def _need(self, n: int):
         if self._pos + n > len(self._buf):
             raise SSKError("truncated sskb input")
+
+    def remaining(self) -> int:
+        return len(self._buf) - self._pos
+
+    def require_count(self, count: int, min_item_size: int, ctx: str, *, reserved_tail: int = 0):
+        if self.remaining() < reserved_tail:
+            raise SSKError("truncated sskb input")
+        available = self.remaining() - reserved_tail
+        if count > available // min_item_size:
+            raise SSKError(f"{ctx}: count {count} exceeds remaining input")
 
     def u8(self) -> int:
         self._need(1)
@@ -79,10 +93,10 @@ def _bit(mask: int, pos: int) -> bool:
     return (mask >> pos) & 1 != 0
 
 
-def _read_prop_blob(r: _Reader):
+def _read_prop_blob(r: _Reader, ctx: str, *, empty_as_none: bool = True):
     n = r.u32()
     if n == 0:
-        return None
+        return None if empty_as_none else {}
     raw = r.raw(n)
     try:
         text = raw.decode('utf-8')
@@ -91,11 +105,10 @@ def _read_prop_blob(r: _Reader):
     try:
         props = yaml.load(text, Loader=_StrictLoader)
     except yaml.YAMLError as e:
-        raise SSKError(f"malformed property blob: {e}")
-    if props is not None and not isinstance(props, dict):
-        raise SSKError("property blob must be a YAML mapping")
-    if props is not None:
-        _check_properties(props, "property blob")
+        raise SSKError(f"{ctx}: malformed property blob: {e}")
+    if not isinstance(props, dict):
+        raise SSKError(f"{ctx}: property blob must be a YAML mapping")
+    _check_properties(props, ctx)
     return props
 
 
@@ -129,6 +142,7 @@ def _read_piece(r: _Reader) -> dict:
     # points
     if not has_from or _bit(fm, _B_POINTS):
         n = r.u32()
+        r.require_count(n, _MIN_POINT_BYTES, f"piece {piece['id']} points")
         piece['points'] = [_read_point(r) for _ in range(n)]
 
     # rotation
@@ -169,14 +183,20 @@ def _read_piece(r: _Reader) -> dict:
     if not has_from:
         if r.u8():
             n = r.u32()
+            r.require_count(n, 4, f"piece {piece['id']} affects")
             piece['affects'] = [r.u32() for _ in range(n)]
     elif _bit(fm, _B_AFFECTS):
         n = r.u32()
+        r.require_count(n, 4, f"piece {piece['id']} affects")
         piece['affects'] = [r.u32() for _ in range(n)]
 
     # properties
     if not has_from or _bit(fm, _B_PROPERTIES):
-        props = _read_prop_blob(r)
+        props = _read_prop_blob(
+            r,
+            f"piece {piece['id']} properties",
+            empty_as_none=not has_from,
+        )
         if props is not None:
             piece['properties'] = props
 
@@ -197,13 +217,15 @@ def parse(data: bytes) -> dict:
         raise SSKError(f"unsupported sskb major version: {major}")
 
     n = r.u32()
+    r.require_count(n, _MIN_PIECE_BYTES, "pieces", reserved_tail=_ROOT_PROPERTY_LENGTH_BYTES)
     pieces = [_read_piece(r) for _ in range(n)]
-    root_props = _read_prop_blob(r)
+    root_props = _read_prop_blob(r, "root properties")
 
     if not r.done():
         raise SSKError("extra trailing bytes in sskb")
 
-    doc = {'version': f"{major}.{minor}", 'pieces': pieces}
+    doc = {'pieces': pieces}
     if root_props is not None:
         doc['properties'] = root_props
+    _check_root(doc)
     return doc

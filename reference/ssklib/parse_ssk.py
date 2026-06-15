@@ -1,4 +1,4 @@
-"""Parse .ssk text files."""
+"""Parse and structurally validate .ssk text documents."""
 
 import math
 
@@ -6,7 +6,7 @@ import yaml
 
 from .error import SSKError
 
-# valid field sets
+_SUPPORTED_MAJOR = 0
 
 _ROOT_FIELDS   = frozenset({'version', 'pieces', 'properties'})
 _PIECE_FIELDS  = frozenset({'id', 'from', 'points', 'rotation', 'size', 'shape',
@@ -18,13 +18,21 @@ _VEC2_FIELDS   = frozenset({'x', 'y'})
 _SHAPES        = frozenset({'circle', 'ngon'})
 _MODES         = frozenset({'add', 'subtract', 'intersect'})
 
-# strict YAML loader
-
 class _StrictLoader(yaml.SafeLoader):
     pass
 
 
 _orig_compose = yaml.composer.Composer.compose_node
+_orig_compose_document = yaml.composer.Composer.compose_document
+
+
+def _strict_compose_document(self):
+    if self.check_event(yaml.DocumentStartEvent):
+        event = self.peek_event()
+        if getattr(event, 'version', None) is not None or getattr(event, 'tags', None):
+            raise SSKError("YAML directives are not valid in .ssk")
+    return _orig_compose_document(self)
+
 
 def _strict_compose(self, parent, index):
     if self.check_event(yaml.AliasEvent):
@@ -42,13 +50,18 @@ def _strict_compose(self, parent, index):
             raise SSKError("YAML explicit tags are not valid in .ssk")
     return _orig_compose(self, parent, index)
 
+_StrictLoader.compose_document = _strict_compose_document
 _StrictLoader.compose_node = _strict_compose
 
 def _dup_key_mapping(loader, node):
     mapping = {}
     for key_node, val_node in node.value:
         key = loader.construct_object(key_node, deep=False)
-        if key in mapping:
+        try:
+            already_present = key in mapping
+        except TypeError as exc:
+            raise SSKError(f"mapping key is not hashable: {key!r}") from exc
+        if already_present:
             raise SSKError(f"duplicate mapping key: {key!r}")
         mapping[key] = loader.construct_object(val_node, deep=True)
     return mapping
@@ -59,12 +72,11 @@ _StrictLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG,
     lambda loader, node: loader.construct_sequence(node, deep=True))
 
-# scalar helpers
-
 def _reject_unknown(obj: dict, valid: frozenset, ctx: str):
-    extra = set(obj) - valid
+    extra = sorted(set(obj) - valid)
     if extra:
-        raise SSKError(f"{ctx}: unknown fields {extra}")
+        names = ', '.join(repr(name) for name in extra)
+        raise SSKError(f"{ctx}: unknown field(s): {names}")
 
 
 def _require_finite(val, ctx: str):
@@ -88,8 +100,6 @@ def _require_non_neg_vec3(v: dict, ctx: str):
         if v[c] < 0:
             raise SSKError(f"{ctx}.{c}: must be non-negative")
 
-# vector validation
-
 def _check_vec3(v, ctx: str):
     if not isinstance(v, dict):
         raise SSKError(f"{ctx}: expected mapping")
@@ -108,8 +118,6 @@ def _check_vec2(v, ctx: str):
         if c not in v:
             raise SSKError(f"{ctx}: missing '{c}'")
         _require_finite(v[c], f"{ctx}.{c}")
-
-# properties validation
 
 def _check_properties(props, ctx: str = "properties"):
     if not isinstance(props, dict):
@@ -139,8 +147,6 @@ def _check_prop_val(val):
         return
     raise SSKError(f"invalid property value type: {type(val).__name__}")
 
-# point validation
-
 def _check_point(pt, pid: int, idx: int):
     ctx = f"piece {pid} point {idx}"
     if not isinstance(pt, dict):
@@ -165,8 +171,6 @@ def _check_point(pt, pid: int, idx: int):
             _check_vec2(pt[fld], f"{ctx} {fld}")
             if pt[fld]['x'] < 0.0 or pt[fld]['x'] > 1.0:
                 raise SSKError(f"{ctx}: {fld}.x must be in [0, 1]")
-
-# piece validation
 
 def _check_piece(piece):
     if not isinstance(piece, dict):
@@ -200,6 +204,8 @@ def _check_piece(piece):
         _require_non_neg_vec3(piece['size'], f"piece {pid} size")
 
     if 'shape' in piece:
+        if not isinstance(piece['shape'], str):
+            raise SSKError(f"piece {pid}: shape must be a string")
         if piece['shape'] not in _SHAPES:
             raise SSKError(f"piece {pid}: invalid shape {piece['shape']!r}")
 
@@ -209,6 +215,8 @@ def _check_piece(piece):
             raise SSKError(f"piece {pid}: sides must be >= 3")
 
     if 'mode' in piece:
+        if not isinstance(piece['mode'], str):
+            raise SSKError(f"piece {pid}: mode must be a string")
         if piece['mode'] not in _MODES:
             raise SSKError(f"piece {pid}: invalid mode {piece['mode']!r}")
 
@@ -225,8 +233,6 @@ def _check_piece(piece):
     if 'properties' in piece:
         _check_properties(piece['properties'], f"piece {pid} properties")
 
-# root validation
-
 def _check_root(doc: dict):
     _reject_unknown(doc, _ROOT_FIELDS, "root")
 
@@ -242,7 +248,7 @@ def _check_root(doc: dict):
         parts = v.split('.')
         if len(parts) != 2 or not parts[0].isdigit() or not parts[1].isdigit():
             raise SSKError(f"invalid version format: {v!r}")
-        if int(parts[0]) != 0:
+        if int(parts[0]) != _SUPPORTED_MAJOR:
             raise SSKError(f"unsupported major version: {parts[0]}")
 
     if 'properties' in doc:
@@ -251,13 +257,10 @@ def _check_root(doc: dict):
     for piece in doc['pieces']:
         _check_piece(piece)
 
-# public API
-
 def parse(text: str) -> dict:
 
-    for line in text.split('\n'):
-        if line.lstrip().startswith('%'):
-            raise SSKError("YAML directives are not valid in .ssk")
+    if not isinstance(text, str):
+        raise SSKError(f".ssk parser expected text, got {type(text).__name__}")
     try:
         doc = yaml.load(text, Loader=_StrictLoader)
     except yaml.YAMLError as e:

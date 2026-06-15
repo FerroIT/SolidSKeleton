@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ssk"
+version = "0.8.0"
+description = "SolidSKeleton reference library and ssk command line tool"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.md"]
+authors = [
+  { name = "Rogier Goossen" }
+]
+keywords = ["3d", "csg", "geometry", "solid modeling", "solidskeleton"]
+dependencies = [
+  "pyyaml>=6.0",
+  "numpy>=1.24",
+  "trimesh>=4.0",
+  "manifold3d>=2.3",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+
+[project.urls]
+Homepage = "https://github.com/FerroIT/SolidSKeleton"
+Repository = "https://github.com/FerroIT/SolidSKeleton"
+Issues = "https://github.com/FerroIT/SolidSKeleton/issues"
+Specifications = "https://github.com/FerroIT/SolidSKeleton/tree/main/format"
+
+[project.scripts]
+ssk = "ssklib.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ssklib*", "ssk*"]

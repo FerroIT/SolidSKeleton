@@ -1,9 +1,8 @@
-"""Tessellate SSK pieces into triangle meshes."""
-
 import math
 
 import numpy as np
 
+from .error import SSKError
 from .vecmath import (
     vec3, normalize, rotation_matrix_xyz, cubic_bezier, cubic_bezier_deriv,
     solve_transition, minimal_rotation, interpolate_rotation,
@@ -11,18 +10,25 @@ from .vecmath import (
 )
 
 
-_PATH_STEPS = 32
-_CIRCLE_N   = 32
+_DEFAULT_RESOLUTION = 32
+_MIN_RESOLUTION = 3
 
 
-def tessellate(piece: dict):
+def tessellate(piece: dict, *, resolution: int = _DEFAULT_RESOLUTION):
+    resolution = _check_resolution(resolution)
 
     if len(piece['points']) == 1:
-        return _point_defined(piece)
-    return _path_defined(piece)
+        return _point_defined(piece, resolution)
+    return _path_defined(piece, resolution)
 
 
-# helpers
+def _check_resolution(resolution: int) -> int:
+    if isinstance(resolution, bool) or not isinstance(resolution, int):
+        raise SSKError("resolution must be an integer")
+    if resolution < _MIN_RESOLUTION:
+        raise SSKError(f"resolution must be >= {_MIN_RESOLUTION}")
+    return resolution
+
 
 def _eff_size(pt: dict, piece: dict) -> tuple:
     s = pt.get('size', piece['size'])
@@ -38,13 +44,13 @@ def _degenerate(sx, sy, sz) -> bool:
     return sum(1 for v in (sx, sy, sz) if v == 0.0) >= 2
 
 
-def _cross_n(piece: dict) -> int:
-    return piece.get('sides', _CIRCLE_N) if piece['shape'] == 'ngon' else _CIRCLE_N
+def _cross_n(piece: dict, resolution: int) -> int:
+    return piece.get('sides', resolution) if piece['shape'] == 'ngon' else resolution
 
 
 # point-defined piece  (geometry/SPEC.md 8.2)
 
-def _point_defined(piece: dict):
+def _point_defined(piece: dict, resolution: int):
     pt = piece['points'][0]
     sx, sy, sz = _eff_size(pt, piece)
     if _degenerate(sx, sy, sz):
@@ -52,7 +58,7 @@ def _point_defined(piece: dict):
     pos = vec3(pt['x'], pt['y'], pt['z'])
     R = rotation_matrix_xyz(*_eff_rot(pt, piece))
     if piece['shape'] == 'circle':
-        return _ellipsoid(pos, sx, sy, sz, R, _CIRCLE_N)
+        return _ellipsoid(pos, sx, sy, sz, R, resolution)
     return _bipyramid(pos, sx, sy, sz, R, piece['sides'])
 
 
@@ -99,12 +105,12 @@ def _bipyramid(c, sx, sy, sz, R, sides):
 
 # path-defined piece  (geometry/SPEC.md 8.1)
 
-def _path_defined(piece: dict):
+def _path_defined(piece: dict, resolution: int):
     points = piece['points']
-    cn = _cross_n(piece)
+    cn = _cross_n(piece, resolution)
 
     segs = [s for i in range(len(points) - 1)
-            if (s := _seg(points, i, piece)) is not None]
+            if (s := _seg(points, i, piece, resolution)) is not None]
     if not segs:
         return None, None
 
@@ -112,7 +118,6 @@ def _path_defined(piece: dict):
     if len(rings) < 2:
         return None, None
 
-    # body mesh
     body_v = []
     for r in rings:
         body_v.extend(r['v'])
@@ -127,10 +132,9 @@ def _path_defined(piece: dict):
             faces.append([a0 + j, a0 + jn, b0 + jn])
             faces.append([a0 + j, b0 + jn, b0 + j])
 
-    # caps
     for ring, rbase, start in [(rings[0], 0, True),
                                 (rings[-1], (nr - 1) * cn, False)]:
-        cap = _cap(ring, piece, cn, start)
+        cap = _cap(ring, piece, cn, start, resolution)
         if cap is None:
             continue
         cv, cf = cap
@@ -146,7 +150,7 @@ def _path_defined(piece: dict):
     return verts, np.array(faces, dtype=np.int32)
 
 
-def _seg(points, i, piece):
+def _seg(points, i, piece, resolution: int):
 
     p0 = vec3(points[i]['x'], points[i]['y'], points[i]['z'])
     p3 = vec3(points[i + 1]['x'], points[i + 1]['y'], points[i + 1]['z'])
@@ -172,7 +176,7 @@ def _seg(points, i, piece):
     t2 = (ti['x'], ti['y']) if ti else (2/3, 2/3)
     has_t = to is not None or ti is not None
 
-    steps = _PATH_STEPS if not linear else max(1, _PATH_STEPS // 4)
+    steps = resolution if not linear else max(1, resolution // 4)
 
     def pos(u):
         if linear:
@@ -225,7 +229,7 @@ def _eval_path(segs, piece, cn):
             t = normalize(t_raw)
             sz = seg['size'](u)
             is_endpoint = (si == 0 and step == 0) or (si == len(segs) - 1 and step == seg['n'])
-            if not is_endpoint and sum(1 for v in (sz[0], sz[1]) if v == 0) >= 2:
+            if not is_endpoint and _degenerate(*sz):
                 continue
 
             Rr = rotation_matrix_xyz(*seg['rot'](u))
@@ -276,21 +280,21 @@ def _cross(pos, frame, size, shape, n):
 
 # caps  (geometry/SPEC.md 8.3)
 
-def _cap(ring, piece, cn, is_start):
+def _cap(ring, piece, cn, is_start, resolution: int):
     sz = ring['size'][2]
     if sz == 0.0:
         return np.array([ring['pos']], dtype=np.float64), []
-    return _rounded_cap(ring, piece, cn, is_start)
+    return _rounded_cap(ring, piece, cn, is_start, resolution)
 
 
-def _rounded_cap(ring, piece, cn, is_start):
+def _rounded_cap(ring, piece, cn, is_start, resolution: int):
     pos = ring['pos']
     lx, ly, lz = ring['frame'][:, 0], ring['frame'][:, 1], ring['frame'][:, 2]
     sx, sy, sz = ring['size']
     d = -1.0 if is_start else 1.0
 
     if piece['shape'] == 'circle':
-        nl = max(2, _CIRCLE_N // 4)
+        nl = max(2, resolution // 4)
         vs = [pos + d * sz * lz]
         for i in range(1, nl):
             phi = math.pi / 2 * i / nl

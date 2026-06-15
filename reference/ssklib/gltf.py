@@ -79,7 +79,7 @@ def _gltf_json(verts, norms, faces, buf_len, bin_uri=None):
         buf_entry['uri'] = bin_uri
 
     return {
-        'asset': {'version': '2.0', 'generator': 'ssk2gltf'},
+        'asset': {'version': '2.0', 'generator': 'ssk'},
         'scene': 0,
         'scenes': [{'nodes': [0]}],
         'nodes': [{'mesh': 0}],

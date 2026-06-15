@@ -15,7 +15,7 @@ All roadmap items under a version have to be completed for that version bump to 
 
 ## 🎉 v0.6 -> v0.7
 
-- [x] Add refrence implementation, documentation and parsing documents
+- [x] Add reference implementation, documentation and parsing documents
 
 ## 🎉 v0.7 -> v0.8
 
@@ -24,8 +24,8 @@ All roadmap items under a version have to be completed for that version bump to 
 
 ## v0.8 -> v0.9
 
-- [ ] Add more languages as a refrence
-- [ ] Cleanup python implementation in refrence
+- [ ] Add more languages as a reference
+- [ ] Cleanup python implementation in reference
 - [ ] Fix typos and structural/syntax issues in SPEC files
 
 ## v0.9 -> v1.0.rc1
