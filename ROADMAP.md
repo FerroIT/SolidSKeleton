@@ -24,7 +24,7 @@ All roadmap items under a version have to be completed for that version bump to 
 
 ## v0.8 -> v0.9
 
-- [ ] Add more languages as a reference
+- [x] Add more languages as a reference
 - [x] Cleanup python implementation in reference
 - [ ] Fix typos and structural/syntax issues in SPEC files
 
