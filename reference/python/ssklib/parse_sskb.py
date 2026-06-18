@@ -213,7 +213,7 @@ def parse(data: bytes) -> dict:
         raise SSKError(f"bad sskb magic: expected {_MAGIC!r}, got {magic!r}")
 
     major, minor = r.u16(), r.u16()
-    if major != 0:
+    if major > 1:
         raise SSKError(f"unsupported sskb major version: {major}")
 
     n = r.u32()

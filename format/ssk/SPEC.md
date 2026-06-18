@@ -1,7 +1,7 @@
 # SSK Text Encoding Specification
 
 Status: Current
-Version: 0.9
+Version: 1.0rc1
 Applies to: `.ssk`
 
 ## 1. Purpose
@@ -293,9 +293,11 @@ The value is a string in the form `major.minor`.
 For this version:
 
 ```text
-0.9
+1.0
 ```
 
 If absent, no version is declared.
 
-Parsers must reject files with an unsupported major version.
+Parsers must reject files with a future unsupported major version.
+
+Parsers may accept older major versions when their structures are compatible with the implementation.

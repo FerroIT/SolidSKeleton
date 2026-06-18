@@ -28,7 +28,6 @@ All roadmap items under a version must be completed before that version bump can
 - [x] Clean up Python implementation in reference
 - [x] Fix typos and structural/syntax issues in SPEC files
 
-## v0.9 -> v1.0.rc1
+## v0.9 -> v1.0rc1
 
-- [ ] Test suite with better validation of text and binary formats.
-- [ ] t.b.d
+- [x] Test suite with better validation of text and binary formats.

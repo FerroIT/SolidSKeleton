@@ -6,7 +6,7 @@ import yaml
 
 from .error import SSKError
 
-_SUPPORTED_MAJOR = 0
+_SUPPORTED_MAJOR = 1
 
 _ROOT_FIELDS   = frozenset({'version', 'pieces', 'properties'})
 _PIECE_FIELDS  = frozenset({'id', 'from', 'points', 'rotation', 'size', 'shape',
@@ -248,7 +248,7 @@ def _check_root(doc: dict):
         parts = v.split('.')
         if len(parts) != 2 or not parts[0].isdigit() or not parts[1].isdigit():
             raise SSKError(f"invalid version format: {v!r}")
-        if int(parts[0]) != _SUPPORTED_MAJOR:
+        if int(parts[0]) > _SUPPORTED_MAJOR:
             raise SSKError(f"unsupported major version: {parts[0]}")
 
     if 'properties' in doc:

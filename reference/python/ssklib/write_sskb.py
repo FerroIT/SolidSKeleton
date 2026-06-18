@@ -12,7 +12,7 @@ from .resolve import resolve
 from .validate import validate
 
 _MAGIC = b'SSKB'
-_DEFAULT_VERSION = (0, 8)
+_DEFAULT_VERSION = (1, 0)
 _U8_MAX = 0xFF
 _U16_MAX = 0xFFFF
 _U32_MAX = 0xFFFFFFFF
@@ -248,7 +248,7 @@ def _preflight(doc: dict):
     major, minor = _version_tuple(doc)
     _require_uint(major, _U16_MAX, 'sskb major version')
     _require_uint(minor, _U16_MAX, 'sskb minor version')
-    if major != _DEFAULT_VERSION[0]:
+    if major > _DEFAULT_VERSION[0]:
         raise SSKError(f"unsupported sskb major version: {major}")
 
     resolved = resolve(copy.deepcopy(doc), in_place=True)

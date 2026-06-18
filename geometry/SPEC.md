@@ -1,7 +1,7 @@
 # SolidSKeleton Geometry Specification
 
 Status: Current
-Version: 0.9
+Version: 1.0rc1
 
 ## 1. Purpose
 

@@ -32,10 +32,21 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e reference/python
 
-      - name: Run tests
+      - name: Run conformance tests
         run: |
-          python -m unittest discover -s reference/python/tests
+          python -m unittest discover -s reference/python/tests -p test_conformance.py
+
+      - name: Run format validation tests
+        run: |
+          python -m unittest discover -s reference/python/tests -p test_format_validation.py
+
+      - name: Run example tests
+        run: |
           python -m unittest discover -s reference/python/tests -p test_examples.py
+
+      - name: Run example sweep tests
+        run: |
+          python -m unittest discover -s reference/python/tests -p test_example_sweep.py
 
   typescript:
     name: TypeScript
@@ -62,9 +73,24 @@ jobs:
           cache: npm
           cache-dependency-path: reference/typescript/package-lock.json
 
-      - name: Run TypeScript tests
+      - name: Install TypeScript dependencies
         working-directory: reference/typescript
         run: |
           npm ci
-          npm test
+
+      - name: Run TypeScript typecheck
+        working-directory: reference/typescript
+        run: npm run typecheck
+
+      - name: Run TypeScript format tests
+        working-directory: reference/typescript
+        run: npm run test:format
+
+      - name: Run TypeScript example tests
+        working-directory: reference/typescript
+        run: npm run test:examples
+
+      - name: Check TypeScript package
+        working-directory: reference/typescript
+        run: |
           npm pack --dry-run

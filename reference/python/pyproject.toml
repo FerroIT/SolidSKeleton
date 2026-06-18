@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ssk"
-version = "0.8.2"
+version = "1.0rc1"
 description = "SolidSKeleton tessellation and format tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,7 +21,7 @@ dependencies = [
   "manifold3d>=2.3",
 ]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",

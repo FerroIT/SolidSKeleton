@@ -2,7 +2,7 @@ import { isAlias, isMap, isScalar, isSeq, parseDocument, type Node } from 'yaml'
 import { SSKError } from './error.js';
 import type { PropertyValue, SSKDocument } from './types.js';
 
-const SUPPORTED_MAJOR = 0;
+const SUPPORTED_MAJOR = 1;
 const ROOT_FIELDS = new Set(['version', 'pieces', 'properties']);
 const PIECE_FIELDS = new Set(['id', 'from', 'points', 'rotation', 'size', 'shape', 'sides', 'mode', 'affects', 'properties']);
 const POINT_FIELDS = new Set(['x', 'y', 'z', 'curve_in', 'curve_out', 'size', 'rotation', 'transition_in', 'transition_out']);
@@ -75,7 +75,7 @@ export function checkRoot(doc: Record<string, unknown>): void {
     if (parts.length !== 2 || !/^\d+$/.test(parts[0]) || !/^\d+$/.test(parts[1])) {
       throw new SSKError(`invalid version format: ${JSON.stringify(version)}`);
     }
-    if (Number(parts[0]) !== SUPPORTED_MAJOR) throw new SSKError(`unsupported major version: ${parts[0]}`);
+    if (Number(parts[0]) > SUPPORTED_MAJOR) throw new SSKError(`unsupported major version: ${parts[0]}`);
   }
 
   if ('properties' in doc) checkProperties(doc.properties, 'properties');

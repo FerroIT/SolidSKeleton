@@ -9,6 +9,7 @@ REFERENCE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REFERENCE_ROOT))
 
 from ssklib.error import SSKError
+from ssklib.boolean import evaluate
 from ssklib.parse_ssk import parse as parse_ssk
 from ssklib.parse_sskb import parse as parse_sskb
 from ssklib.resolve import resolve
@@ -93,6 +94,30 @@ class InheritanceAndValidationTests(unittest.TestCase):
             validate(doc)
 
 
+class BooleanDiagnosticsTests(unittest.TestCase):
+    def test_subtract_failure_names_piece_context_and_mesh_health(self):
+        pieces = [
+            {'id': 0, 'mode': 'add'},
+            {'id': 1, 'mode': 'subtract'},
+        ]
+        meshes = {
+            0: (
+                [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+                [[0, 1, 2], [0, 2, 3]],
+            ),
+            1: (
+                [[0, 0, -1], [2, 0, -1], [0, 2, -1], [0, 0, 1]],
+                [[0, 2, 1], [0, 1, 3], [1, 2, 3], [2, 0, 3]],
+            ),
+        }
+
+        with self.assertRaisesRegex(
+            SSKError,
+            'subtract piece 1 from piece 0.*boundary_edges=4',
+        ):
+            evaluate(pieces, meshes)
+
+
 class SSKBBinaryTests(unittest.TestCase):
     def test_round_trip_preserves_explicit_empty_inherited_properties(self):
         doc = {
@@ -109,12 +134,12 @@ class SSKBBinaryTests(unittest.TestCase):
         self.assertEqual(resolved['pieces'][1]['properties'], {})
 
     def test_rejects_non_mapping_property_blob(self):
-        data = b'SSKB' + struct.pack('<HHI', 0, 8, 0) + struct.pack('<I', 1) + b' '
+        data = b'SSKB' + struct.pack('<HHI', 1, 0, 0) + struct.pack('<I', 1) + b' '
         with self.assertRaisesRegex(SSKError, 'property blob must be a YAML mapping'):
             parse_sskb(data)
 
     def test_rejects_piece_count_that_exceeds_remaining_input(self):
-        data = b'SSKB' + struct.pack('<HHI', 0, 8, 2) + struct.pack('<I', 0)
+        data = b'SSKB' + struct.pack('<HHI', 1, 0, 2) + struct.pack('<I', 0)
         with self.assertRaisesRegex(SSKError, 'count 2 exceeds remaining input'):
             parse_sskb(data)
 

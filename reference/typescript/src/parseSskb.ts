@@ -26,7 +26,7 @@ export function parseSskb(data: ArrayBuffer | Uint8Array): SSKDocument {
 
   const major = reader.u16();
   const minor = reader.u16();
-  if (major !== 0) throw new SSKError(`unsupported sskb major version: ${major}`);
+  if (major > 1) throw new SSKError(`unsupported sskb major version: ${major}`);
 
   const count = reader.u32();
   reader.requireCount(count, MIN_PIECE_BYTES, 'pieces', ROOT_PROPERTY_LENGTH_BYTES);

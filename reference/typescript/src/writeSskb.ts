@@ -6,7 +6,7 @@ import type { Piece, Point, SSKDocument, Vec2, Vec3 } from './types.js';
 import { validate } from './validate.js';
 
 const MAGIC = new Uint8Array([0x53, 0x53, 0x4b, 0x42]);
-const DEFAULT_VERSION = [0, 8] as const;
+const DEFAULT_VERSION = [1, 0] as const;
 const U8_MAX = 0xff;
 const U16_MAX = 0xffff;
 const U32_MAX = 0xffffffff;
@@ -215,6 +215,6 @@ function preflight(doc: SSKDocument): void {
   const [major, minor] = versionTuple(doc);
   requireUint(major, U16_MAX, 'sskb major version');
   requireUint(minor, U16_MAX, 'sskb minor version');
-  if (major !== DEFAULT_VERSION[0]) throw new SSKError(`unsupported sskb major version: ${major}`);
+  if (major > DEFAULT_VERSION[0]) throw new SSKError(`unsupported sskb major version: ${major}`);
   validate(resolve(doc, { inPlace: false }));
 }

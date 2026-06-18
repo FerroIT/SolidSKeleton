@@ -24,5 +24,6 @@ import { parseSsk, parseSskb, resolve, tessellate, validate, writeSskb } from '@
 ## Notes
 
 - Mesh output defaults to resolution 32.
-- CSG uses [Manifold](https://github.com/elalish/manifold).
+- Per-piece `tessellate` is pure TypeScript.
+- Document-level CSG and glTF/GLB conversion use [Manifold](https://github.com/elalish/manifold) via `manifold-3d` WASM.
 - glTF output uses unindexed meshes with flat per-face normals.

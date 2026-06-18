@@ -11,7 +11,6 @@ import {
   documentDifferences,
   load,
   meshDocument,
-  parseSsk,
   parseSskb,
   validateDocument,
   writeSskb,
@@ -42,12 +41,6 @@ const sskFiles = walk(examples);
 assert.ok(sskFiles.length > 0, 'examples should be discovered');
 
 const pythonData = pythonExampleData(sskFiles);
-
-assert.throws(() => parseSsk('pieces: []\npieces: []\n'), /Map keys must be unique|duplicate/i);
-assert.throws(() => parseSsk('%YAML 1.2\n---\npieces: []\n'), /directives|YAML/i);
-assert.throws(() => parseSsk('pieces: !!seq []\n'), /explicit tags/i);
-assert.equal(parseSsk('pieces: []\nproperties:\n  note: hello !world\n').properties?.note, 'hello !world');
-assert.throws(() => parseSsk('pieces: []\nproperties:\n  1: x\n'), /keys must be strings/i);
 
 for (const path of sskFiles) {
   const label = relative(root, path);

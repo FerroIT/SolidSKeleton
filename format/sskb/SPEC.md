@@ -1,7 +1,7 @@
 # SSKB Binary Encoding Specification
 
 Status: Current
-Version: 0.9
+Version: 1.0rc1
 Applies to: `.sskb`
 
 ## 1. Purpose
@@ -50,11 +50,13 @@ minor      u16
 For this version:
 
 ```text
-major = 0
-minor = 9
+major = 1
+minor = 0
 ```
 
-Parsers must reject files with an unsupported major version.
+Parsers must reject files with a future unsupported major version.
+
+Parsers may accept older major versions when their binary layout is compatible with the implementation.
 
 Parsers must not reject files with an unknown minor version.
 
