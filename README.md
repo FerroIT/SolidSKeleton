@@ -18,7 +18,8 @@ The format is lightly typed and enforces strict structural constraints, allowing
 - Version: 1.0rc1
 - Author: Rogier Goossen
   
-This specification is in early development and is subject to change. The format should be considered beta until version 1.0.
+As of 18-6-2026 this project has released its first release candidate ***v1.0rc1*** , which means as the project currently stands (referencing the SPEC and Schema's) will be frozen, this means this SPEC is currently assumed to be final and will release as an official release ***v1.0*** on 28-6-2026.
+The versioning of the reference implimentations / packages will continue under the v1.* prefix.
 
 ## Specifications
 
