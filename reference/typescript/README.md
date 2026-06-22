@@ -29,7 +29,7 @@ import { parseSsk, parseSskb, resolve, tessellate, validate, writeSskb } from '@
 ## Notes
 
 - Mesh output defaults to resolution 32.
-- GLB import reconstructs (estimated) SSK-native primitives where practical and reports sampled volume coverage and overfill percentages. `expectedPieceCount` is a soft guide, not an exact target.
+- GLB import reconstructs (estimated) SSK-native primitives where practical and reports sampled volume coverage and overfill percentages. `expectedPieceCount` is a soft guide, not an exact target. Expect different results from the Python package considering numpy and javascript math differences.
 - Per-piece `tessellate` is pure TypeScript.
 - Document-level CSG and glTF/GLB conversion use [Manifold](https://github.com/elalish/manifold) via `manifold-3d` WASM.
 - glTF output uses unindexed meshes with flat per-face normals.

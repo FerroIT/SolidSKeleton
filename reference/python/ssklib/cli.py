@@ -26,6 +26,10 @@ def main(argv: list[str] | None = None) -> int:
                 args.output,
                 resolution=args.resolution,
                 expected_piece_count=args.expected_piece_count,
+                infill_weight=args.infill_weight,
+                outfill_weight=args.outfill_weight,
+                complexity_weight=args.complexity_weight,
+                expected_piece_count_weight=args.expected_piece_count_weight,
             )
             _print_conversion(result)
             return 0
@@ -71,6 +75,30 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help='soft guide for GLTF/GLB import piece count; reconstruction quality remains primary',
     )
+    convert_parser.add_argument(
+        '--infill-weight',
+        type=_weight_arg,
+        default=1.18,
+        help='GLTF/GLB import score weight for source volume coverage (default: 1.18)',
+    )
+    convert_parser.add_argument(
+        '--outfill-weight',
+        type=_weight_arg,
+        default=1.05,
+        help='GLTF/GLB import score penalty weight for generated overfill (default: 1.05)',
+    )
+    convert_parser.add_argument(
+        '--complexity-weight',
+        type=_weight_arg,
+        default=1.0,
+        help='GLTF/GLB import score penalty weight for reconstruction complexity (default: 1.0)',
+    )
+    convert_parser.add_argument(
+        '--expected-piece-count-weight',
+        type=_weight_arg,
+        default=9.0,
+        help='GLTF/GLB import score weight for expected piece count guide (default: 9.0)',
+    )
 
     inspect_parser = subparsers.add_parser('inspect', help='print a validated JSON summary')
     inspect_parser.add_argument('input', help='input .ssk or .sskb file')
@@ -96,6 +124,16 @@ def _expected_piece_count_arg(value: str) -> int:
     if count < 1:
         raise argparse.ArgumentTypeError('expected piece count must be >= 1')
     return count
+
+
+def _weight_arg(value: str) -> float:
+    try:
+        weight = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError('weight must be a number') from exc
+    if weight < 0:
+        raise argparse.ArgumentTypeError('weight must be >= 0')
+    return weight
 
 
 def _print_conversion(result):

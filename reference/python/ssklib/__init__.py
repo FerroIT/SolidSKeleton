@@ -19,7 +19,7 @@ from .resolve import resolve
 from .validate import validate
 from .write_sskb import write as write_sskb
 
-__version__ = '1.0rc1'
+__version__ = '1.1.0'
 
 __all__ = [
     'SSKError',

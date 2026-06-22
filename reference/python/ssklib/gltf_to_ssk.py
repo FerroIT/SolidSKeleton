@@ -26,9 +26,25 @@ class ImportResult:
     score: float
     source_vertices: np.ndarray
     source_faces: np.ndarray
+    expected_piece_count: int | None = None
+    resolution: int = DEFAULT_RESOLUTION
+    infill_weight: float = 1.18
+    outfill_weight: float = 1.05
+    complexity_weight: float = 1.0
+    expected_piece_count_weight: float = 9.0
 
     def score_document(self, document: dict) -> QualityMetrics:
-        return score_document_against_mesh(document, self.source_vertices, self.source_faces)
+        return score_document_against_mesh(
+            document,
+            self.source_vertices,
+            self.source_faces,
+            expected_piece_count=self.expected_piece_count,
+            resolution=self.resolution,
+            infill_weight=self.infill_weight,
+            outfill_weight=self.outfill_weight,
+            complexity_weight=self.complexity_weight,
+            expected_piece_count_weight=self.expected_piece_count_weight,
+        )
 
 
 def import_gltf_to_ssk(
@@ -37,6 +53,10 @@ def import_gltf_to_ssk(
     expected_piece_count: int | None = None,
     max_pieces: int | None = None,
     resolution: int = DEFAULT_RESOLUTION,
+    infill_weight: float = 1.18,
+    outfill_weight: float = 1.05,
+    complexity_weight: float = 1.0,
+    expected_piece_count_weight: float = 9.0,
 ) -> ImportResult:
     mesh = _load_mesh(path)
     source_vertices = _gltf_to_ssk(np.asarray(mesh.vertices, dtype=np.float64))
@@ -52,7 +72,17 @@ def import_gltf_to_ssk(
     best_doc: dict | None = None
     best_quality: QualityMetrics | None = None
     for doc in candidates:
-        quality = score_document_against_mesh(doc, source_vertices, source_faces, expected_piece_count=expected_piece_count, resolution=resolution)
+        quality = score_document_against_mesh(
+            doc,
+            source_vertices,
+            source_faces,
+            expected_piece_count=expected_piece_count,
+            resolution=resolution,
+            infill_weight=infill_weight,
+            outfill_weight=outfill_weight,
+            complexity_weight=complexity_weight,
+            expected_piece_count_weight=expected_piece_count_weight,
+        )
         if best_quality is None or quality.score > best_quality.score:
             best_doc = doc
             best_quality = quality
@@ -66,6 +96,12 @@ def import_gltf_to_ssk(
         score=best_quality.score,
         source_vertices=source_vertices,
         source_faces=source_faces,
+        expected_piece_count=expected_piece_count,
+        resolution=resolution,
+        infill_weight=infill_weight,
+        outfill_weight=outfill_weight,
+        complexity_weight=complexity_weight,
+        expected_piece_count_weight=expected_piece_count_weight,
     )
 
 
@@ -76,6 +112,10 @@ def score_document_against_mesh(
     *,
     expected_piece_count: int | None = None,
     resolution: int = DEFAULT_RESOLUTION,
+    infill_weight: float = 1.18,
+    outfill_weight: float = 1.05,
+    complexity_weight: float = 1.0,
+    expected_piece_count_weight: float = 9.0,
 ) -> QualityMetrics:
     try:
         resolved = validate_document(document)
@@ -99,8 +139,8 @@ def score_document_against_mesh(
     complexity = 0.035 * piece_count + 0.006 * point_count
     guide = 0.0
     if expected_piece_count is not None and expected_piece_count > 0:
-        guide = 9.0 * math.exp(-abs(piece_count - expected_piece_count) / max(expected_piece_count, 1))
-    score = 1.18 * coverage - 1.05 * overfill - complexity + guide
+        guide = expected_piece_count_weight * math.exp(-abs(piece_count - expected_piece_count) / max(expected_piece_count, 1))
+    score = infill_weight * coverage - outfill_weight * overfill - complexity_weight * complexity + guide
     return QualityMetrics(round(coverage, 3), round(overfill, 3), float(score))
 
 

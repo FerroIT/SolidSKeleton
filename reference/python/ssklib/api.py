@@ -75,6 +75,10 @@ def convert(
     *,
     resolution: int = DEFAULT_RESOLUTION,
     expected_piece_count: int | None = None,
+    infill_weight: float = 1.18,
+    outfill_weight: float = 1.05,
+    complexity_weight: float = 1.0,
+    expected_piece_count_weight: float = 9.0,
 ) -> ConversionResult:
 
     source = Path(input_path)
@@ -87,7 +91,15 @@ def convert(
     if input_extension in {'.glb', '.gltf'}:
         if output_extension not in {'.ssk', '.sskb'}:
             raise SSKError('GLTF/GLB input can only be imported to .ssk or .sskb')
-        imported = import_gltf_to_ssk(source, expected_piece_count=expected_piece_count, resolution=resolution)
+        imported = import_gltf_to_ssk(
+            source,
+            expected_piece_count=expected_piece_count,
+            resolution=resolution,
+            infill_weight=infill_weight,
+            outfill_weight=outfill_weight,
+            complexity_weight=complexity_weight,
+            expected_piece_count_weight=expected_piece_count_weight,
+        )
         doc = imported.document
         if output_extension == '.ssk':
             text = _dump_ssk(doc)

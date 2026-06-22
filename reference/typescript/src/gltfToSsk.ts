@@ -6,6 +6,10 @@ export type GltfImportOptions = {
   expectedPieceCount?: number;
   resolution?: number;
   maxPieces?: number;
+  infillWeight?: number;
+  outfillWeight?: number;
+  complexityWeight?: number;
+  expectedPieceCountWeight?: number;
 };
 
 export type QualityMetrics = {
@@ -51,15 +55,15 @@ export async function scoreDocument(document: SSKDocument, sourceVertices: numbe
   const generated = await meshDocument(resolved, { resolution: Math.min(Math.max(options.resolution ?? 16, 8), 16) });
   if (!generated || generated.faces.length === 0) return { coveragePercent: 0, overfillPercent: 100, score: -10000 };
   const genVertices = gltfToSsk(generated.vertices);
-  return scoreFromMeshes(document, sourceVertices, sourceFaces, genVertices, generated.faces, options.expectedPieceCount);
+  return scoreFromMeshes(document, sourceVertices, sourceFaces, genVertices, generated.faces, options);
 }
 
 function scoreDocumentSync(document: SSKDocument, sourceVertices: number[][], sourceFaces: number[][], options: GltfImportOptions = {}): QualityMetrics {
   const approx = approximateMesh(document);
-  return scoreFromMeshes(document, sourceVertices, sourceFaces, approx.vertices, approx.faces, options.expectedPieceCount);
+  return scoreFromMeshes(document, sourceVertices, sourceFaces, approx.vertices, approx.faces, options);
 }
 
-function scoreFromMeshes(document: SSKDocument, sourceVertices: number[][], sourceFaces: number[][], genVertices: number[][], genFaces: number[][], expectedPieceCount?: number): QualityMetrics {
+function scoreFromMeshes(document: SSKDocument, sourceVertices: number[][], sourceFaces: number[][], genVertices: number[][], genFaces: number[][], options: GltfImportOptions): QualityMetrics {
   const sourceBox = [min(sourceVertices), max(sourceVertices)];
   const genBox = [min(genVertices), max(genVertices)];
   let { coverage, overfill } = sampledCoverageOverfill(sourceVertices, sourceFaces, genVertices, genFaces);
@@ -70,8 +74,14 @@ function scoreFromMeshes(document: SSKDocument, sourceVertices: number[][], sour
   overfill = Math.max(overfill, Math.max(0, 100 * (genVol - intersectVol) / genVol));
   const pointCount = document.pieces.reduce((total, piece) => total + (piece.points?.length ?? 0), 0);
   const complexity = 0.035 * document.pieces.length + 0.006 * pointCount;
-  const guide = expectedPieceCount && expectedPieceCount > 0 ? 9.0 * Math.exp(-Math.abs(document.pieces.length - expectedPieceCount) / expectedPieceCount) : 0;
-  return { coveragePercent: round3(coverage), overfillPercent: round3(overfill), score: 1.18 * coverage - 1.05 * overfill - complexity + guide };
+  const guide = options.expectedPieceCount && options.expectedPieceCount > 0
+    ? (options.expectedPieceCountWeight ?? 9.0) * Math.exp(-Math.abs(document.pieces.length - options.expectedPieceCount) / options.expectedPieceCount)
+    : 0;
+  return {
+    coveragePercent: round3(coverage),
+    overfillPercent: round3(overfill),
+    score: (options.infillWeight ?? 1.18) * coverage - (options.outfillWeight ?? 1.05) * overfill - (options.complexityWeight ?? 1.0) * complexity + guide,
+  };
 }
 
 function parseGlb(input: GltfImportInput): MeshData {
