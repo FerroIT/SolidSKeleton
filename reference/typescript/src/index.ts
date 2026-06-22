@@ -12,6 +12,8 @@ export {
 } from './api.js';
 export { evaluate } from './boolean.js';
 export { writeGlb, writeGltf } from './gltf.js';
+export { importGltfToSsk, scoreDocument } from './gltfToSsk.js';
+export type { GltfImportInput, GltfImportOptions, GltfImportResult, QualityMetrics } from './gltfToSsk.js';
 export { parseSsk } from './parseSsk.js';
 export { parseSskb } from './parseSskb.js';
 export { resolve } from './resolve.js';

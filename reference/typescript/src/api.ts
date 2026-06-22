@@ -9,6 +9,8 @@ import type { ConversionFormat, ConversionResult, MeshData, ResolvedDocument, SS
 import { sskToGltf } from './vecmath.js';
 import { validate } from './validate.js';
 import { writeSskb } from './writeSskb.js';
+export { importGltfToSsk, scoreDocument } from './gltfToSsk.js';
+export type { GltfImportOptions, GltfImportResult, QualityMetrics } from './gltfToSsk.js';
 
 export const DEFAULT_RESOLUTION = 32;
 

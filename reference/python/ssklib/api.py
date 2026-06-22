@@ -7,6 +7,8 @@ from pathlib import Path
 import struct
 from typing import Any
 
+import yaml
+
 from .error import SSKError
 from .parse_ssk import parse as parse_ssk
 from .parse_sskb import parse as parse_sskb
@@ -16,8 +18,9 @@ from .write_sskb import write as write_sskb
 
 
 _SUPPORTED_INPUT_EXTENSIONS = frozenset({'.ssk', '.sskb'})
-_SUPPORTED_OUTPUT_EXTENSIONS = frozenset({'.sskb', '.glb', '.gltf'})
+_SUPPORTED_OUTPUT_EXTENSIONS = frozenset({'.ssk', '.sskb', '.glb', '.gltf'})
 DEFAULT_RESOLUTION = 32
+
 _ZERO_ROTATION = {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
 
@@ -30,6 +33,8 @@ class ConversionResult:
     bytes_written: int | None = None
     vertex_count: int | None = None
     triangle_count: int | None = None
+    coverage_percent: float | None = None
+    overfill_percent: float | None = None
 
 
 def load(path: str | Path) -> dict:
@@ -69,13 +74,44 @@ def convert(
     output_path: str | Path,
     *,
     resolution: int = DEFAULT_RESOLUTION,
+    expected_piece_count: int | None = None,
 ) -> ConversionResult:
 
     source = Path(input_path)
     target = Path(output_path)
+    input_extension = source.suffix.lower()
     output_extension = target.suffix.lower()
     if output_extension not in _SUPPORTED_OUTPUT_EXTENSIONS:
         raise SSKError(f"unsupported output extension: {target.suffix or '(none)'}")
+
+    if input_extension in {'.glb', '.gltf'}:
+        if output_extension not in {'.ssk', '.sskb'}:
+            raise SSKError('GLTF/GLB input can only be imported to .ssk or .sskb')
+        imported = import_gltf_to_ssk(source, expected_piece_count=expected_piece_count, resolution=resolution)
+        doc = imported.document
+        if output_extension == '.ssk':
+            text = _dump_ssk(doc)
+            _write_text(target, text)
+            return ConversionResult(
+                input_path=source,
+                output_path=target,
+                output_format='ssk',
+                piece_count=len(validate_document(doc)['pieces']),
+                bytes_written=len(text.encode('utf-8')),
+                coverage_percent=imported.coverage_percent,
+                overfill_percent=imported.overfill_percent,
+            )
+        data = write_sskb(doc)
+        _write_bytes(target, data)
+        return ConversionResult(
+            input_path=source,
+            output_path=target,
+            output_format='sskb',
+            piece_count=len(validate_document(doc)['pieces']),
+            bytes_written=len(data),
+            coverage_percent=imported.coverage_percent,
+            overfill_percent=imported.overfill_percent,
+        )
 
     doc = load(source)
     resolved = validate_document(doc)
@@ -89,6 +125,16 @@ def convert(
             output_format='sskb',
             piece_count=len(resolved['pieces']),
             bytes_written=len(data),
+        )
+    if output_extension == '.ssk':
+        text = _dump_ssk(doc)
+        _write_text(target, text)
+        return ConversionResult(
+            input_path=source,
+            output_path=target,
+            output_format='ssk',
+            piece_count=len(resolved['pieces']),
+            bytes_written=len(text.encode('utf-8')),
         )
 
     vertices, faces = mesh_document(resolved, resolution=resolution)
@@ -171,6 +217,11 @@ def documents_equivalent(left: dict, right: dict, **kwargs) -> bool:
     return not document_differences(left, right, **kwargs)
 
 
+def import_gltf_to_ssk(*args, **kwargs):
+    from .gltf_to_ssk import import_gltf_to_ssk as _import_gltf_to_ssk
+    return _import_gltf_to_ssk(*args, **kwargs)
+
+
 def mesh_document(doc: dict, *, resolution: int = DEFAULT_RESOLUTION):
     import numpy as np
 
@@ -214,6 +265,17 @@ def _write_bytes(path: Path, data: bytes):
         path.write_bytes(data)
     except OSError as exc:
         raise SSKError(f"could not write {path}: {exc}") from exc
+
+
+def _write_text(path: Path, text: str):
+    try:
+        path.write_text(text, encoding='utf-8')
+    except OSError as exc:
+        raise SSKError(f"could not write {path}: {exc}") from exc
+
+
+def _dump_ssk(doc: dict) -> str:
+    return yaml.safe_dump(doc, sort_keys=False, allow_unicode=True)
 
 
 def _read_declared_version(path: Path, doc: dict) -> str | None:
@@ -339,3 +401,7 @@ def _compare_values(left, right, path: str, differences: list[str], *, rel_tol: 
 
 def _is_number(value) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+
+

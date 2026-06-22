@@ -21,7 +21,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  pieces: {summary['pieces']}")
             return 0
         if args.command == 'convert':
-            result = convert(args.input, args.output, resolution=args.resolution)
+            result = convert(
+                args.input,
+                args.output,
+                resolution=args.resolution,
+                expected_piece_count=args.expected_piece_count,
+            )
             _print_conversion(result)
             return 0
         if args.command == 'inspect':
@@ -60,6 +65,12 @@ def _parser() -> argparse.ArgumentParser:
         default=DEFAULT_RESOLUTION,
         help=f'mesh tessellation resolution for .glb/.gltf output (default: {DEFAULT_RESOLUTION})',
     )
+    convert_parser.add_argument(
+        '--expected-piece-count',
+        type=_expected_piece_count_arg,
+        default=None,
+        help='soft guide for GLTF/GLB import piece count; reconstruction quality remains primary',
+    )
 
     inspect_parser = subparsers.add_parser('inspect', help='print a validated JSON summary')
     inspect_parser.add_argument('input', help='input .ssk or .sskb file')
@@ -77,11 +88,24 @@ def _resolution_arg(value: str) -> int:
     return resolution
 
 
+def _expected_piece_count_arg(value: str) -> int:
+    try:
+        count = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError('expected piece count must be an integer') from exc
+    if count < 1:
+        raise argparse.ArgumentTypeError('expected piece count must be >= 1')
+    return count
+
+
 def _print_conversion(result):
+    quality = ''
+    if result.coverage_percent is not None and result.overfill_percent is not None:
+        quality = f", coverage {result.coverage_percent:.1f}%, overfill {result.overfill_percent:.1f}%"
     if result.bytes_written is not None:
         print(
             f"{result.input_path} -> {result.output_path}  "
-            f"({result.bytes_written} bytes, {result.piece_count} pieces)"
+            f"({result.bytes_written} bytes, {result.piece_count} pieces{quality})"
         )
         return
     print(

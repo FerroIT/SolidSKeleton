@@ -59,6 +59,8 @@ export type ConversionResult = {
   bytesWritten?: number;
   vertexCount?: number;
   triangleCount?: number;
+  coveragePercent?: number;
+  overfillPercent?: number;
   data: Uint8Array | GltfOutput;
 };
 
