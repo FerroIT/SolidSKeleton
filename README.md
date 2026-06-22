@@ -1,6 +1,15 @@
 # SolidSKeleton
-*<sup>[Python package](https://pypi.org/project/ssk) .. [NPM package](https://www.npmjs.com/package/@ferroit/ssk) .. [FerroIT website](https://www.ferroit.com/)</sup>*
+<a href="https://pypi.org/project/ssk">
+  <img src="https://img.shields.io/badge/PyPI-ssk-blue?logo=python" alt="PyPI">
+</a>
+<a href="https://www.npmjs.com/package/@ferroit/ssk">
+  <img src="https://img.shields.io/badge/npm-@ferroit/ssk-CB3837?logo=npm" alt="npm">
+</a>
+<a href="https://www.ferroit.com/">
+  <img src="https://img.shields.io/badge/Website-ferroit.com-111111" alt="Website">
+</a>
 
+---
 
 SolidSKeleton is an open geometry data format for lightweight solid (CSG) modeling, designed to stay expressive without excessive structural or class overhead.
 
