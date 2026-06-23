@@ -20,6 +20,17 @@ from .write_sskb import write as write_sskb
 _SUPPORTED_INPUT_EXTENSIONS = frozenset({'.ssk', '.sskb'})
 _SUPPORTED_OUTPUT_EXTENSIONS = frozenset({'.ssk', '.sskb', '.glb', '.gltf'})
 DEFAULT_RESOLUTION = 32
+DEFAULT_GLTF_IMPORT_INFILL_WEIGHT = 1.18
+DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT = 1.05
+DEFAULT_GLTF_IMPORT_COMPLEXITY_WEIGHT = 1.0
+DEFAULT_GLTF_IMPORT_WEIGHTS = {
+    'infill_weight': DEFAULT_GLTF_IMPORT_INFILL_WEIGHT,
+    'outfill_weight': DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT,
+    'complexity_weight': DEFAULT_GLTF_IMPORT_COMPLEXITY_WEIGHT,
+}
+DEFAULT_INFILL_WEIGHT = DEFAULT_GLTF_IMPORT_INFILL_WEIGHT
+DEFAULT_OUTFILL_WEIGHT = DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT
+DEFAULT_COMPLEXITY_WEIGHT = DEFAULT_GLTF_IMPORT_COMPLEXITY_WEIGHT
 
 _ZERO_ROTATION = {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
@@ -75,10 +86,9 @@ def convert(
     *,
     resolution: int = DEFAULT_RESOLUTION,
     expected_piece_count: int | None = None,
-    infill_weight: float = 1.18,
-    outfill_weight: float = 1.05,
-    complexity_weight: float = 1.0,
-    expected_piece_count_weight: float = 9.0,
+    infill_weight: float = DEFAULT_INFILL_WEIGHT,
+    outfill_weight: float = DEFAULT_OUTFILL_WEIGHT,
+    complexity_weight: float = DEFAULT_COMPLEXITY_WEIGHT,
 ) -> ConversionResult:
 
     source = Path(input_path)
@@ -98,7 +108,6 @@ def convert(
             infill_weight=infill_weight,
             outfill_weight=outfill_weight,
             complexity_weight=complexity_weight,
-            expected_piece_count_weight=expected_piece_count_weight,
         )
         doc = imported.document
         if output_extension == '.ssk':

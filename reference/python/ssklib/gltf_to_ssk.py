@@ -7,8 +7,16 @@ from typing import Iterable
 
 import numpy as np
 
-from .api import DEFAULT_RESOLUTION, mesh_document, validate_document
+from .api import (
+    DEFAULT_COMPLEXITY_WEIGHT,
+    DEFAULT_INFILL_WEIGHT,
+    DEFAULT_OUTFILL_WEIGHT,
+    DEFAULT_RESOLUTION,
+    mesh_document,
+    validate_document,
+)
 from .error import SSKError
+from .tessellate import tessellate
 
 
 @dataclass(frozen=True)
@@ -28,10 +36,9 @@ class ImportResult:
     source_faces: np.ndarray
     expected_piece_count: int | None = None
     resolution: int = DEFAULT_RESOLUTION
-    infill_weight: float = 1.18
-    outfill_weight: float = 1.05
-    complexity_weight: float = 1.0
-    expected_piece_count_weight: float = 9.0
+    infill_weight: float = DEFAULT_INFILL_WEIGHT
+    outfill_weight: float = DEFAULT_OUTFILL_WEIGHT
+    complexity_weight: float = DEFAULT_COMPLEXITY_WEIGHT
 
     def score_document(self, document: dict) -> QualityMetrics:
         return score_document_against_mesh(
@@ -43,7 +50,6 @@ class ImportResult:
             infill_weight=self.infill_weight,
             outfill_weight=self.outfill_weight,
             complexity_weight=self.complexity_weight,
-            expected_piece_count_weight=self.expected_piece_count_weight,
         )
 
 
@@ -53,10 +59,9 @@ def import_gltf_to_ssk(
     expected_piece_count: int | None = None,
     max_pieces: int | None = None,
     resolution: int = DEFAULT_RESOLUTION,
-    infill_weight: float = 1.18,
-    outfill_weight: float = 1.05,
-    complexity_weight: float = 1.0,
-    expected_piece_count_weight: float = 9.0,
+    infill_weight: float = DEFAULT_INFILL_WEIGHT,
+    outfill_weight: float = DEFAULT_OUTFILL_WEIGHT,
+    complexity_weight: float = DEFAULT_COMPLEXITY_WEIGHT,
 ) -> ImportResult:
     mesh = _load_mesh(path)
     source_vertices = _gltf_to_ssk(np.asarray(mesh.vertices, dtype=np.float64))
@@ -65,29 +70,39 @@ def import_gltf_to_ssk(
     if len(source_faces) == 0:
         raise SSKError('GLTF/GLB input contains no non-degenerate triangles')
 
-    candidates = _generate_candidate_documents(source_vertices, source_faces, expected_piece_count, max_pieces)
+    prefer_low_overfill = outfill_weight > infill_weight
+    candidates = _generate_candidate_documents(
+        source_vertices,
+        source_faces,
+        expected_piece_count,
+        max_pieces,
+        prefer_low_overfill=prefer_low_overfill,
+    )
     if not candidates:
         raise SSKError('GLTF/GLB import generated no SSK candidates')
 
-    best_doc: dict | None = None
-    best_quality: QualityMetrics | None = None
+    best_doc = None
+    best_quality = None
     for doc in candidates:
-        quality = score_document_against_mesh(
-            doc,
-            source_vertices,
-            source_faces,
-            expected_piece_count=expected_piece_count,
-            resolution=resolution,
-            infill_weight=infill_weight,
-            outfill_weight=outfill_weight,
-            complexity_weight=complexity_weight,
-            expected_piece_count_weight=expected_piece_count_weight,
-        )
-        if best_quality is None or quality.score > best_quality.score:
-            best_doc = doc
-            best_quality = quality
+        try:
+            quality = score_document_for_selection(
+                doc,
+                source_vertices,
+                source_faces,
+                expected_piece_count=expected_piece_count,
+                resolution=resolution,
+                infill_weight=infill_weight,
+                outfill_weight=outfill_weight,
+                complexity_weight=complexity_weight,
+            )
+            if best_quality is None or quality.score > best_quality.score:
+                best_doc = doc
+                best_quality = quality
+        except SSKError:
+            continue
+    if best_doc is None or best_quality is None:
+        raise SSKError('GLTF/GLB import generated no scoreable SSK candidates')
 
-    assert best_doc is not None and best_quality is not None
     validate_document(best_doc)
     return ImportResult(
         document=best_doc,
@@ -101,7 +116,6 @@ def import_gltf_to_ssk(
         infill_weight=infill_weight,
         outfill_weight=outfill_weight,
         complexity_weight=complexity_weight,
-        expected_piece_count_weight=expected_piece_count_weight,
     )
 
 
@@ -112,10 +126,9 @@ def score_document_against_mesh(
     *,
     expected_piece_count: int | None = None,
     resolution: int = DEFAULT_RESOLUTION,
-    infill_weight: float = 1.18,
-    outfill_weight: float = 1.05,
-    complexity_weight: float = 1.0,
-    expected_piece_count_weight: float = 9.0,
+    infill_weight: float = DEFAULT_INFILL_WEIGHT,
+    outfill_weight: float = DEFAULT_OUTFILL_WEIGHT,
+    complexity_weight: float = DEFAULT_COMPLEXITY_WEIGHT,
 ) -> QualityMetrics:
     try:
         resolved = validate_document(document)
@@ -136,12 +149,77 @@ def score_document_against_mesh(
     )
     piece_count = len(resolved['pieces'])
     point_count = sum(len(piece.get('points', [])) for piece in resolved['pieces'])
-    complexity = 0.035 * piece_count + 0.006 * point_count
-    guide = 0.0
-    if expected_piece_count is not None and expected_piece_count > 0:
-        guide = expected_piece_count_weight * math.exp(-abs(piece_count - expected_piece_count) / max(expected_piece_count, 1))
-    score = infill_weight * coverage - outfill_weight * overfill - complexity_weight * complexity + guide
+    score = _quality_score(
+        coverage,
+        overfill,
+        piece_count,
+        point_count,
+        expected_piece_count=expected_piece_count,
+        infill_weight=infill_weight,
+        outfill_weight=outfill_weight,
+        complexity_weight=complexity_weight,
+    )
     return QualityMetrics(round(coverage, 3), round(overfill, 3), float(score))
+
+
+def score_document_for_selection(
+    document: dict,
+    source_vertices: np.ndarray,
+    source_faces: np.ndarray,
+    *,
+    expected_piece_count: int | None = None,
+    resolution: int = DEFAULT_RESOLUTION,
+    infill_weight: float = DEFAULT_INFILL_WEIGHT,
+    outfill_weight: float = DEFAULT_OUTFILL_WEIGHT,
+    complexity_weight: float = DEFAULT_COMPLEXITY_WEIGHT,
+) -> QualityMetrics:
+    resolved = validate_document(document)
+    contributions = _approximate_contributions(resolved, resolution=min(max(8, resolution), 16))
+    if not contributions:
+        return QualityMetrics(0.0, 100.0, -10_000.0)
+    coverage, overfill = _sampled_coverage_overfill_from_contributions(
+        np.asarray(source_vertices, dtype=np.float64),
+        np.asarray(source_faces, dtype=np.int32),
+        contributions,
+    )
+    point_count = sum(len(piece.get('points', [])) for piece in resolved['pieces'])
+    score = _quality_score(
+        coverage,
+        overfill,
+        len(resolved['pieces']),
+        point_count,
+        expected_piece_count=expected_piece_count,
+        infill_weight=infill_weight,
+        outfill_weight=outfill_weight,
+        complexity_weight=complexity_weight,
+    )
+    return QualityMetrics(round(coverage, 3), round(overfill, 3), float(score))
+
+
+def _quality_score(
+    coverage: float,
+    overfill: float,
+    piece_count: int,
+    point_count: int,
+    *,
+    expected_piece_count: int | None,
+    infill_weight: float,
+    outfill_weight: float,
+    complexity_weight: float,
+) -> float:
+    complexity = 0.035 * piece_count + 0.006 * point_count
+    coverage_score = coverage / 100.0
+    containment_score = 1.0 - (overfill / 100.0)
+    complexity_penalty = complexity / (1.0 + complexity)
+    piece_count_term = 1.0 if expected_piece_count is not None and expected_piece_count > 0 else 0.0
+    piece_count_score = 0.0 if piece_count_term == 0.0 else max(0.0, 1.0 - (abs(piece_count - expected_piece_count) / max(expected_piece_count, 1)))
+    total_weight = infill_weight + outfill_weight + complexity_weight + piece_count_term
+    return (
+        infill_weight * coverage_score
+        + outfill_weight * containment_score
+        - complexity_weight * complexity_penalty
+        + piece_count_score
+    ) / max(total_weight, 1e-9)
 
 
 def _load_mesh(path: str | Path):
@@ -199,24 +277,41 @@ def _weld_and_remove_degenerates(vertices: np.ndarray, faces: np.ndarray):
     return unique[used], compact_index[remapped]
 
 
-def _generate_candidate_documents(vertices: np.ndarray, faces: np.ndarray, expected_piece_count: int | None, max_pieces: int | None) -> list[dict]:
+def _generate_candidate_documents(
+    vertices: np.ndarray,
+    faces: np.ndarray,
+    expected_piece_count: int | None,
+    max_pieces: int | None,
+    *,
+    prefer_low_overfill: bool = False,
+) -> list[dict]:
     components = _connected_components(vertices, faces)
     guard = max_pieces or max(8, min(112, (expected_piece_count or 56) * 2))
 
+    segmented_pieces: list[dict] = []
     detailed_pieces: list[dict] = []
     compact_pieces: list[dict] = []
+    segmented_requested = False
     for comp_vertices, comp_faces in components[:guard]:
         alternatives = _component_candidate_sets(comp_vertices, comp_faces)
         if not alternatives:
             continue
-        detailed_pieces.extend(alternatives[0])
-        compact_pieces.extend(alternatives[-1])
+        segmented = _long_axis_partition_box_pieces(comp_vertices, comp_faces)
+        if segmented:
+            segmented_requested = True
+            _append_candidate_pieces(segmented_pieces, segmented)
+        elif prefer_low_overfill:
+            _append_candidate_pieces(segmented_pieces, alternatives[0])
+        _append_candidate_pieces(detailed_pieces, alternatives[0])
+        _append_candidate_pieces(compact_pieces, alternatives[-1])
 
     docs: list[dict] = []
     if len(components) == 1:
         decomposed = _axis_partition_box_pieces(vertices, faces)
         if len(decomposed) > 1:
             docs.append({'pieces': _renumber_with_inheritance(decomposed[:guard])})
+    if segmented_requested and segmented_pieces and len(segmented_pieces) != len(detailed_pieces):
+        docs.append({'pieces': _renumber_with_inheritance(segmented_pieces[:guard])})
     if detailed_pieces:
         docs.append({'pieces': _renumber_with_inheritance(detailed_pieces[:guard])})
     if compact_pieces and len(compact_pieces) != len(detailed_pieces):
@@ -301,8 +396,40 @@ def _axis_partition_box_pieces(vertices: np.ndarray, faces: np.ndarray) -> list[
         sub_maxs = vertices[mask].max(axis=0)
         if np.any(sub_maxs - sub_mins <= 1e-7):
             continue
-        pieces.append(_box_piece(len(pieces), sub_mins, sub_maxs))
+        _append_candidate_pieces(pieces, _cuboid_shell_box_pieces(sub_mins, sub_maxs) or [_box_piece(0, sub_mins, sub_maxs)])
     return pieces if len(pieces) > 1 else []
+
+
+def _long_axis_partition_box_pieces(vertices: np.ndarray, faces: np.ndarray) -> list[dict]:
+    mins = vertices.min(axis=0)
+    maxs = vertices.max(axis=0)
+    ext = maxs - mins
+    long_axis = int(np.argmax(ext))
+    cross = max(float(ext[axis]) for axis in range(3) if axis != long_axis)
+    if cross <= 1e-7 or float(ext[long_axis]) / cross < 3.0 or len(vertices) < 12:
+        return []
+
+    segment_count = max(2, min(12, int(math.ceil(float(ext[long_axis]) / max(cross * 2.5, 1e-6)))))
+    edges = np.linspace(float(mins[long_axis]), float(maxs[long_axis]), segment_count + 1)
+    pieces: list[dict] = []
+    volume = 0.0
+    for index in range(segment_count):
+        lo = edges[index]
+        hi = edges[index + 1]
+        mask = (vertices[:, long_axis] >= lo - 1e-5) & (vertices[:, long_axis] <= hi + 1e-5)
+        if int(mask.sum()) < 4:
+            continue
+        sub_mins = vertices[mask].min(axis=0)
+        sub_maxs = vertices[mask].max(axis=0)
+        if np.any(sub_maxs - sub_mins <= 1e-7):
+            continue
+        volume += _bbox_volume(sub_mins, sub_maxs)
+        _append_candidate_pieces(pieces, _cuboid_shell_box_pieces(sub_mins, sub_maxs) or [_box_piece(0, sub_mins, sub_maxs)])
+
+    whole_volume = _bbox_volume(mins, maxs)
+    if len(pieces) <= 1 or whole_volume <= 0.0 or volume >= whole_volume * 0.92:
+        return []
+    return pieces
 
 
 def _component_candidates(vertices: np.ndarray, faces: np.ndarray) -> list[dict]:
@@ -326,10 +453,29 @@ def _component_candidate_sets(vertices: np.ndarray, faces: np.ndarray) -> list[l
         return [[_cylinder_piece(0, mins, maxs)]]
 
     simple = [_box_piece(0, mins, maxs)]
-    square_strips = _square_strip_box_pieces(mins, maxs)
-    if len(square_strips) > 1:
-        return [square_strips, simple]
+    cuboid_shell = _cuboid_shell_box_pieces(mins, maxs)
+    if cuboid_shell:
+        return [cuboid_shell, simple]
     return [simple]
+
+
+def _append_candidate_pieces(target: list[dict], pieces: list[dict]) -> None:
+    offset = len(target)
+    id_map = {int(piece.get('id', index)): offset + index for index, piece in enumerate(pieces)}
+    for index, piece in enumerate(pieces):
+        copied = {key: _copy_value(value) for key, value in piece.items()}
+        copied['id'] = offset + index
+        if 'affects' in copied:
+            copied['affects'] = [id_map.get(int(affected), int(affected)) for affected in copied['affects']]
+        target.append(copied)
+
+
+def _copy_value(value):
+    if isinstance(value, dict):
+        return {key: _copy_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_copy_value(item) for item in value]
+    return value
 
 
 def _looks_like_sphere(ext: np.ndarray, face_count: int) -> bool:
@@ -359,7 +505,7 @@ def _vec(v: Iterable[float]) -> dict:
     return {'x': x, 'y': y, 'z': z}
 
 
-def _square_strip_box_pieces(mins: np.ndarray, maxs: np.ndarray) -> list[dict]:
+def _cuboid_shell_box_pieces(mins: np.ndarray, maxs: np.ndarray) -> list[dict]:
     ext = maxs - mins
     axis = int(np.argmax(ext)) if not np.allclose(ext, ext[0]) else 2
     cross_axes = [i for i in range(3) if i != axis]
@@ -371,30 +517,29 @@ def _square_strip_box_pieces(mins: np.ndarray, maxs: np.ndarray) -> list[dict]:
     narrow = float(ext[narrow_axis])
     wide = float(ext[wide_axis])
     if narrow <= 1e-7 or wide / narrow <= 1.35:
-        return [_box_piece(0, mins, maxs)]
+        return []
 
-    strip_count = max(2, min(12, int(round(wide / narrow))))
-    strip_width = wide / strip_count
-    square_side = max(narrow, strip_width)
-    pieces: list[dict] = []
-    center = (mins + maxs) * 0.5
-    start = center[wide_axis] - 0.5 * wide
-    for index in range(strip_count):
-        sub_mins = mins.copy()
-        sub_maxs = maxs.copy()
-        c_wide = start + (index + 0.5) * strip_width
-        sub_mins[wide_axis] = c_wide - 0.5 * square_side
-        sub_maxs[wide_axis] = c_wide + 0.5 * square_side
-        sub_mins[narrow_axis] = center[narrow_axis] - 0.5 * square_side
-        sub_maxs[narrow_axis] = center[narrow_axis] + 0.5 * square_side
-        pieces.append(_box_piece(index, sub_mins, sub_maxs))
-    return pieces
+    outer_mins = mins.copy()
+    outer_maxs = maxs.copy()
+    inner_mins = mins.copy()
+    inner_maxs = maxs.copy()
+
+    outer_maxs[narrow_axis] = mins[narrow_axis] + wide
+    inner_mins[narrow_axis] = maxs[narrow_axis]
+    inner_maxs[narrow_axis] = maxs[narrow_axis] + wide
+
+    outer = _box_piece(0, outer_mins, outer_maxs, axis=axis)
+    inner = _box_piece(1, inner_mins, inner_maxs, axis=axis)
+    inner['mode'] = 'subtract'
+    inner['affects'] = [0]
+    return [outer, inner]
 
 
-def _box_piece(pid: int, mins: np.ndarray, maxs: np.ndarray) -> dict:
+def _box_piece(pid: int, mins: np.ndarray, maxs: np.ndarray, *, axis: int | None = None) -> dict:
     center = (mins + maxs) * 0.5
     ext = maxs - mins
-    axis = int(np.argmax(ext)) if not np.allclose(ext, ext[0]) else 2
+    if axis is None:
+        axis = int(np.argmax(ext)) if not np.allclose(ext, ext[0]) else 2
     half = ext * 0.5
     radius_axes = [i for i in range(3) if i != axis]
     p0 = center.copy(); p1 = center.copy()
@@ -502,6 +647,8 @@ def _inheritance_key(piece: dict) -> tuple:
     return (
         piece.get('shape'),
         piece.get('sides'),
+        piece.get('mode', 'add'),
+        tuple(piece.get('affects', ())),
         tuple(round(float(size.get(k, 0.0)), 4) for k in ('x', 'y', 'z')),
         tuple(round(float(rot.get(k, 0.0)), 4) for k in ('x', 'y', 'z')),
     )
@@ -512,30 +659,181 @@ def _bbox_volume(mins: np.ndarray, maxs: np.ndarray) -> float:
     return float(ext[0] * ext[1] * ext[2])
 
 
+def _bbox_intersection_volume(a_mins: np.ndarray, a_maxs: np.ndarray, b_mins: np.ndarray, b_maxs: np.ndarray) -> float:
+    ext = np.maximum(np.minimum(a_maxs, b_maxs) - np.maximum(a_mins, b_mins), 0.0)
+    return float(ext[0] * ext[1] * ext[2])
+
+
 def _sampled_coverage_overfill(source_vertices, source_faces, gen_vertices, gen_faces):
     mins = np.minimum(source_vertices.min(axis=0), gen_vertices.min(axis=0))
     maxs = np.maximum(source_vertices.max(axis=0), gen_vertices.max(axis=0))
     extent = maxs - mins
     pad = max(float(extent.max()) * 0.025, 1e-3)
     mins -= pad; maxs += pad
-    points = _sample_points(mins, maxs, 4096)
-    source_inside = _points_inside_mesh(points, source_vertices, source_faces)
-    gen_inside = _points_inside_mesh(points, gen_vertices, gen_faces)
+    points = _sample_points(mins, maxs, 1728)
+    source_inside = _points_inside_mesh_union(points, source_vertices, source_faces)
+    gen_inside = _points_inside_mesh_union(points, gen_vertices, gen_faces)
 
     source_count = int(source_inside.sum())
     gen_count = int(gen_inside.sum())
+    if source_count == 0:
+        source_mins = source_vertices.min(axis=0)
+        source_maxs = source_vertices.max(axis=0)
+        gen_mins = gen_vertices.min(axis=0)
+        gen_maxs = gen_vertices.max(axis=0)
+        source_volume = max(_bbox_volume(source_mins, source_maxs), 1e-9)
+        gen_volume = max(_bbox_volume(gen_mins, gen_maxs), 1e-9)
+        intersect_volume = _bbox_intersection_volume(source_mins, source_maxs, gen_mins, gen_maxs)
+        coverage = min(100.0, 100.0 * intersect_volume / source_volume)
+        overfill = max(0.0, 100.0 * (gen_volume - intersect_volume) / gen_volume)
+        return coverage, overfill
     coverage = 0.0 if source_count == 0 else 100.0 * int((source_inside & gen_inside).sum()) / source_count
     overfill = 100.0 if gen_count == 0 else 100.0 * int((gen_inside & ~source_inside).sum()) / gen_count
     return coverage, overfill
 
 
 def _sample_points(mins: np.ndarray, maxs: np.ndarray, count: int) -> np.ndarray:
-    rng = np.random.default_rng(12345)
-    random = rng.random((count, 3)) * (maxs - mins) + mins
+    state = 12345
+    random = np.empty((count, 3), dtype=np.float64)
+    for index in range(count):
+        for axis in range(3):
+            state = (1664525 * state + 1013904223) & 0xFFFFFFFF
+            random[index, axis] = state / 4294967296.0
+    random = random * (maxs - mins) + mins
     grid_n = 10
     axes = [np.linspace(mins[i], maxs[i], grid_n) for i in range(3)]
     grid = np.array(np.meshgrid(*axes, indexing='ij')).reshape(3, -1).T
     return np.vstack([grid, random])
+
+
+def _approximate_contributions(document: dict, resolution: int):
+    contributions = {}
+    for piece in document['pieces']:
+        if piece.get('mode', 'add') == 'subtract':
+            cutter_bounds = _square_sweep_bounds(piece)
+            if cutter_bounds is None:
+                continue
+            targets = piece.get('affects', list(contributions.keys()))
+            for target_id in targets:
+                target = contributions.get(int(target_id))
+                if target is None or target[2] is not True:
+                    continue
+                reduced = _subtract_bounds((target[0], target[1]), cutter_bounds)
+                if reduced is not None:
+                    contributions[int(target_id)] = (reduced[0], reduced[1], True)
+            continue
+        bounds = _square_sweep_bounds(piece)
+        if bounds is not None:
+            contributions[int(piece['id'])] = (bounds[0], bounds[1], True)
+            continue
+        vertices, faces = tessellate(piece, resolution=resolution)
+        if vertices is not None and faces is not None and len(faces) > 0:
+            contributions[int(piece['id'])] = (np.asarray(vertices, dtype=np.float64), np.asarray(faces, dtype=np.int32), False)
+    return list(contributions.values())
+
+
+def _sampled_coverage_overfill_from_contributions(source_vertices, source_faces, contributions):
+    mins = source_vertices.min(axis=0).copy()
+    maxs = source_vertices.max(axis=0).copy()
+    for first, second, is_bounds in contributions:
+        if is_bounds:
+            mins = np.minimum(mins, first)
+            maxs = np.maximum(maxs, second)
+        else:
+            mins = np.minimum(mins, first.min(axis=0))
+            maxs = np.maximum(maxs, first.max(axis=0))
+    extent = maxs - mins
+    pad = max(float(extent.max()) * 0.025, 1e-3)
+    mins -= pad; maxs += pad
+    points = _sample_points(mins, maxs, 1728)
+    source_inside = _points_inside_mesh_union(points, source_vertices, source_faces)
+    gen_inside = np.zeros(len(points), dtype=bool)
+    for first, second, is_bounds in contributions:
+        if is_bounds:
+            gen_inside |= np.all((points >= first) & (points <= second), axis=1)
+        else:
+            gen_inside |= _points_inside_mesh_union(points, first, second)
+
+    source_count = int(source_inside.sum())
+    gen_count = int(gen_inside.sum())
+    if source_count == 0:
+        source_mins = source_vertices.min(axis=0)
+        source_maxs = source_vertices.max(axis=0)
+        source_volume = max(_bbox_volume(source_mins, source_maxs), 1e-9)
+        gen_volume = max(_bbox_volume(mins, maxs), 1e-9)
+        intersect_volume = _bbox_intersection_volume(source_mins, source_maxs, mins, maxs)
+        return min(100.0, 100.0 * intersect_volume / source_volume), max(0.0, 100.0 * (gen_volume - intersect_volume) / gen_volume)
+    coverage = 0.0 if source_count == 0 else 100.0 * int((source_inside & gen_inside).sum()) / source_count
+    overfill = 100.0 if gen_count == 0 else 100.0 * int((gen_inside & ~source_inside).sum()) / gen_count
+    return coverage, overfill
+
+
+def _square_sweep_bounds(piece: dict):
+    if piece.get('shape') != 'ngon' or piece.get('sides') != 4 or len(piece.get('points', [])) != 2 or 'size' not in piece:
+        return None
+    sx = float(piece['size']['x'])
+    sy = float(piece['size']['y'])
+    if abs(sx - sy) > max(abs(sx), abs(sy), 1.0) * 1e-6:
+        return None
+    first = np.array([piece['points'][0]['x'], piece['points'][0]['y'], piece['points'][0]['z']], dtype=np.float64)
+    second = np.array([piece['points'][1]['x'], piece['points'][1]['y'], piece['points'][1]['z']], dtype=np.float64)
+    delta = np.abs(second - first)
+    axis = int(np.argmax(delta))
+    if delta[axis] <= 1e-7 or np.any(np.delete(delta, axis) > 1e-7):
+        return None
+    side = sx * math.sqrt(2.0)
+    center = (first + second) * 0.5
+    mins = center.copy()
+    maxs = center.copy()
+    mins[axis] = min(first[axis], second[axis])
+    maxs[axis] = max(first[axis], second[axis])
+    for cross_axis in range(3):
+        if cross_axis == axis:
+            continue
+        mins[cross_axis] = center[cross_axis] - side * 0.5
+        maxs[cross_axis] = center[cross_axis] + side * 0.5
+    return mins, maxs
+
+
+def _subtract_bounds(base, cutter):
+    base_mins, base_maxs = base
+    cutter_mins, cutter_maxs = cutter
+    tolerance = max(float(np.max(np.abs(base_maxs - base_mins))), 1.0) * 1e-6
+    for axis in range(3):
+        other_axes = [index for index in range(3) if index != axis]
+        if not all(cutter_mins[index] <= base_mins[index] + tolerance and cutter_maxs[index] >= base_maxs[index] - tolerance for index in other_axes):
+            continue
+        if cutter_mins[axis] > base_mins[axis] + tolerance and cutter_mins[axis] < base_maxs[axis] - tolerance and cutter_maxs[axis] >= base_maxs[axis] - tolerance:
+            maxs = base_maxs.copy()
+            maxs[axis] = cutter_mins[axis]
+            return base_mins.copy(), maxs
+        if cutter_maxs[axis] > base_mins[axis] + tolerance and cutter_maxs[axis] < base_maxs[axis] - tolerance and cutter_mins[axis] <= base_mins[axis] + tolerance:
+            mins = base_mins.copy()
+            mins[axis] = cutter_maxs[axis]
+            return mins, base_maxs.copy()
+    return None
+
+
+def _box_mesh_from_bounds(mins: np.ndarray, maxs: np.ndarray):
+    vertices = np.array([
+        [mins[0], mins[1], mins[2]], [maxs[0], mins[1], mins[2]], [maxs[0], maxs[1], mins[2]], [mins[0], maxs[1], mins[2]],
+        [mins[0], mins[1], maxs[2]], [maxs[0], mins[1], maxs[2]], [maxs[0], maxs[1], maxs[2]], [mins[0], maxs[1], maxs[2]],
+    ], dtype=np.float64)
+    faces = np.array([
+        [0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4],
+        [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7],
+    ], dtype=np.int32)
+    return vertices, faces
+
+
+def _points_inside_mesh_union(points: np.ndarray, vertices: np.ndarray, faces: np.ndarray) -> np.ndarray:
+    components = _connected_components(vertices, faces)
+    if len(components) <= 1:
+        return _points_inside_mesh(points, vertices, faces)
+    out = np.zeros(len(points), dtype=bool)
+    for comp_vertices, comp_faces in components:
+        out |= _points_inside_mesh(points, comp_vertices, comp_faces)
+    return out
 
 
 def _points_inside_mesh(points: np.ndarray, vertices: np.ndarray, faces: np.ndarray) -> np.ndarray:

@@ -5,7 +5,14 @@ import json
 import sys
 
 from . import __version__
-from .api import DEFAULT_RESOLUTION, convert, inspect_file
+from .api import (
+    DEFAULT_COMPLEXITY_WEIGHT,
+    DEFAULT_INFILL_WEIGHT,
+    DEFAULT_OUTFILL_WEIGHT,
+    DEFAULT_RESOLUTION,
+    convert,
+    inspect_file,
+)
 from .error import SSKError
 
 
@@ -29,7 +36,6 @@ def main(argv: list[str] | None = None) -> int:
                 infill_weight=args.infill_weight,
                 outfill_weight=args.outfill_weight,
                 complexity_weight=args.complexity_weight,
-                expected_piece_count_weight=args.expected_piece_count_weight,
             )
             _print_conversion(result)
             return 0
@@ -70,36 +76,32 @@ def _parser() -> argparse.ArgumentParser:
         help=f'mesh tessellation resolution for .glb/.gltf output (default: {DEFAULT_RESOLUTION})',
     )
     convert_parser.add_argument(
-        '--expected-piece-count',
+        '--expected-piece-count', '--expected_piece_count',
         type=_expected_piece_count_arg,
         default=None,
         help='soft guide for GLTF/GLB import piece count; reconstruction quality remains primary',
     )
     convert_parser.add_argument(
-        '--infill-weight',
+        '--infill-weight', '--infill_weight',
+        dest='infill_weight',
         type=_weight_arg,
-        default=1.18,
-        help='GLTF/GLB import score weight for source volume coverage (default: 1.18)',
+        default=DEFAULT_INFILL_WEIGHT,
+        help=f'GLTF/GLB import score weight for source volume coverage (default: {DEFAULT_INFILL_WEIGHT})',
     )
     convert_parser.add_argument(
-        '--outfill-weight',
+        '--outfill-weight', '--outfill_weight',
+        dest='outfill_weight',
         type=_weight_arg,
-        default=1.05,
-        help='GLTF/GLB import score penalty weight for generated overfill (default: 1.05)',
+        default=DEFAULT_OUTFILL_WEIGHT,
+        help=f'GLTF/GLB import score penalty weight for generated overfill (default: {DEFAULT_OUTFILL_WEIGHT})',
     )
     convert_parser.add_argument(
-        '--complexity-weight',
+        '--complexity-weight', '--complexity_weight',
+        dest='complexity_weight',
         type=_weight_arg,
-        default=1.0,
-        help='GLTF/GLB import score penalty weight for reconstruction complexity (default: 1.0)',
+        default=DEFAULT_COMPLEXITY_WEIGHT,
+        help=f'GLTF/GLB import score penalty weight for reconstruction complexity (default: {DEFAULT_COMPLEXITY_WEIGHT})',
     )
-    convert_parser.add_argument(
-        '--expected-piece-count-weight',
-        type=_weight_arg,
-        default=9.0,
-        help='GLTF/GLB import score weight for expected piece count guide (default: 9.0)',
-    )
-
     inspect_parser = subparsers.add_parser('inspect', help='print a validated JSON summary')
     inspect_parser.add_argument('input', help='input .ssk or .sskb file')
 

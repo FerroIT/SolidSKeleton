@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 
 import {
+  DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT,
+  DEFAULT_GLTF_IMPORT_WEIGHTS,
   importGltfToSsk,
   meshDocument,
   parseSskb,
@@ -8,6 +10,7 @@ import {
   writeGlb,
   writeSskb,
   type MeshData,
+  type SSKDocument,
 } from '../src/index.js';
 
 const cube = box([1, 1, 1], [0, 0, 0]);
@@ -19,6 +22,19 @@ assert.equal(cubeResult.document.pieces[0].shape, 'ngon');
 assert.equal(cubeResult.document.pieces[0].sides, 4);
 assert.ok(cubeResult.coveragePercent >= 70, `cube coverage was ${cubeResult.coveragePercent}`);
 assert.ok(cubeResult.overfillPercent < 50);
+
+const slabResult = importGltfToSsk(writeGlb(box([4, 0.2, 1], [0, 0, 0])));
+validateDocument(slabResult.document);
+assert.equal(slabResult.document.pieces.length, 2, 'thin cuboid should use one subtractive square-sweep pair');
+assert.equal(slabResult.document.pieces[1].mode, 'subtract');
+assert.deepEqual(slabResult.document.pieces[1].affects, [0]);
+for (const piece of slabResult.document.pieces) {
+  assert.equal(piece.shape, 'ngon');
+  assert.equal(piece.sides, 4);
+  assert.ok(Math.abs((piece.size?.x ?? 0) - (piece.size?.y ?? 0)) < 1e-6, 'cuboid fill sweeps should stay square');
+}
+assert.ok(slabResult.coveragePercent >= 70, `slab coverage was ${slabResult.coveragePercent}`);
+assert.ok(slabResult.overfillPercent < 50, `slab overfill was ${slabResult.overfillPercent}`);
 
 const sskb = writeSskb(cubeResult.document);
 validateDocument(parseSskb(sskb));
@@ -38,8 +54,19 @@ assert.ok(ladderResult.document.pieces.length > 1, 'ladder should not collapse t
 assert.ok(ladderResult.document.pieces.filter((piece) => 'from' in piece).length >= 3, 'ladder repeated rungs should use inheritance');
 assert.notEqual(ladderResult.document.pieces.length, 6, 'expectedPieceCount is a guide, not an exact quota');
 
-// @ts-expect-error targetPieceCount is intentionally not part of the public options API.
-importGltfToSsk(writeGlb(cube), { targetPieceCount: 6 });
+const giantBox: SSKDocument = {
+  pieces: [{
+    id: 0,
+    points: [{ x: -2000, y: 0, z: 0 }, { x: 2000, y: 0, z: 0 }],
+    size: { x: 2000, y: 2000, z: 0 },
+    rotation: { x: 45, y: 0, z: 0 },
+    shape: 'ngon',
+    sides: 4,
+  }],
+};
+const lowPenalty = importGltfToSsk(writeGlb(cube), { ...DEFAULT_GLTF_IMPORT_WEIGHTS, outfillWeight: 0 });
+const highPenalty = importGltfToSsk(writeGlb(cube), { ...DEFAULT_GLTF_IMPORT_WEIGHTS, outfillWeight: DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT * 50 });
+assert.ok((await highPenalty.scoreDocument(giantBox)).score < (await lowPenalty.scoreDocument(giantBox)).score);
 
 console.log('ok gltf import');
 

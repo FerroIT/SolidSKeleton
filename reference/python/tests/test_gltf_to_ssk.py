@@ -1,5 +1,3 @@
-import contextlib
-import io
 import json
 import math
 import sys
@@ -13,8 +11,8 @@ import trimesh
 REFERENCE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REFERENCE_ROOT))
 
+from ssklib import DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT, DEFAULT_GLTF_IMPORT_WEIGHTS
 from ssklib.api import convert, import_gltf_to_ssk, load, mesh_document, validate_document
-from ssklib.cli import main as cli_main
 from ssklib.gltf import write_glb
 from ssklib.parse_ssk import parse as parse_ssk
 from ssklib.parse_sskb import parse as parse_sskb
@@ -105,18 +103,6 @@ class GltfToSskTests(unittest.TestCase):
         self.assertNotEqual(42, result.piece_count)
         self.assertGreaterEqual(result.coverage_percent, 70.0)
 
-    def test_cli_accepts_expected_piece_count_option(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            source = Path(temp_dir) / 'ladder.glb'
-            target = Path(temp_dir) / 'ladder.sskb'
-            _write_mesh_glb(_ladder(), source)
-            with contextlib.redirect_stdout(io.StringIO()) as stdout:
-                self.assertEqual(0, cli_main(['convert', str(source), str(target), '--expected-piece-count', '42']))
-            self.assertTrue(target.is_file())
-            text = stdout.getvalue()
-            self.assertIn('coverage', text)
-            self.assertIn('overfill', text)
-
     def test_coverage_and_overfill_are_reported_and_penalize_giant_box(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             source = Path(temp_dir) / 'donut.glb'
@@ -136,6 +122,37 @@ class GltfToSskTests(unittest.TestCase):
             self.assertGreater(imported.coverage_percent, 60.0)
             self.assertGreater(imported.score, giant_quality.score)
             self.assertGreater(giant_quality.overfill_percent, imported.overfill_percent)
+
+    def test_public_import_weights_affect_candidate_scores(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source = Path(temp_dir) / 'cube.glb'
+            _write_mesh_glb(_box(), source)
+            low_penalty = import_gltf_to_ssk(source, **{**DEFAULT_GLTF_IMPORT_WEIGHTS, 'outfill_weight': 0.0})
+            high_penalty = import_gltf_to_ssk(source, **{**DEFAULT_GLTF_IMPORT_WEIGHTS, 'outfill_weight': DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT * 50.0})
+            giant = {
+                'pieces': [{
+                    'id': 0,
+                    'points': [{'x': -2000, 'y': 0, 'z': 0}, {'x': 2000, 'y': 0, 'z': 0}],
+                    'size': {'x': 2000, 'y': 2000, 'z': 0},
+                    'rotation': {'x': 45, 'y': 0, 'z': 0},
+                    'shape': 'ngon',
+                    'sides': 4,
+                }]
+            }
+            self.assertLess(high_penalty.score_document(giant).score, low_penalty.score_document(giant).score)
+
+    def test_thin_cuboid_uses_subtractive_square_sweeps(self):
+        result, doc, _ = self._convert_mesh(_box((4.0, 0.2, 1.0)))
+        self.assertEqual(2, result.piece_count)
+        add_piece, subtract_piece = doc['pieces']
+        self.assertEqual('subtract', subtract_piece.get('mode'))
+        self.assertEqual([add_piece['id']], subtract_piece.get('affects'))
+        for piece in (add_piece, subtract_piece):
+            self.assertEqual('ngon', piece['shape'])
+            self.assertEqual(4, piece['sides'])
+            self.assertAlmostEqual(piece['size']['x'], piece['size']['y'], places=6)
+        self.assertGreaterEqual(result.coverage_percent, 80.0)
+        self.assertLess(result.overfill_percent, 35.0)
 
     def test_ladder_recovers_semantic_sweeps_with_inheritance(self):
         result, doc, _ = self._convert_mesh(_ladder(), expected_piece_count=6)

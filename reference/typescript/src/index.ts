@@ -12,7 +12,14 @@ export {
 } from './api.js';
 export { evaluate } from './boolean.js';
 export { writeGlb, writeGltf } from './gltf.js';
-export { importGltfToSsk, scoreDocument } from './gltfToSsk.js';
+export {
+  DEFAULT_GLTF_IMPORT_COMPLEXITY_WEIGHT,
+  DEFAULT_GLTF_IMPORT_INFILL_WEIGHT,
+  DEFAULT_GLTF_IMPORT_OUTFILL_WEIGHT,
+  DEFAULT_GLTF_IMPORT_WEIGHTS,
+  importGltfToSsk,
+  scoreDocument,
+} from './gltfToSsk.js';
 export type { GltfImportInput, GltfImportOptions, GltfImportResult, QualityMetrics } from './gltfToSsk.js';
 export { parseSsk } from './parseSsk.js';
 export { parseSskb } from './parseSskb.js';
