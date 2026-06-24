@@ -9,7 +9,7 @@ npm install @ferroit/ssk
 ## Usage
 
 ```ts
-import { convertDocument, importGltfToSsk, load, validateDocument } from '@ferroit/ssk';
+import { convertDocument, importGltfToSsk, load, validateDocument, writeSsk } from '@ferroit/ssk';
 
 const doc = validateDocument(load(sskText, 'ssk'));
 const glb = await convertDocument(doc, 'glb', { resolution: 64 });
@@ -22,6 +22,7 @@ const imported = importGltfToSsk(glbBytes, {
 });
 // .gltf JSON + BIN is also accepted: { json: gltfJson, bin: gltfBin }
 console.log(imported.coveragePercent, imported.overfillPercent);
+const sskText = writeSsk(imported.document);
 
 const quality = await imported.scoreDocument(someDoc);
 ```
@@ -29,7 +30,7 @@ const quality = await imported.scoreDocument(someDoc);
 Lower-level functions:
 
 ```ts
-import { parseSsk, parseSskb, resolve, tessellate, validate, writeSskb } from '@ferroit/ssk';
+import { parseSsk, parseSskb, resolve, tessellate, validate, writeSsk, writeSskb } from '@ferroit/ssk';
 ```
 
 ## Notes

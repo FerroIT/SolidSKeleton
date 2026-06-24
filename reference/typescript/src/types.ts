@@ -51,18 +51,30 @@ export type MeshData = {
   faces: number[][];
 };
 
-export type ConversionFormat = 'sskb' | 'glb' | 'gltf';
+export type ConversionFormat = 'ssk' | 'sskb' | 'glb' | 'gltf';
 
-export type ConversionResult = {
-  outputFormat: ConversionFormat;
-  pieceCount: number;
-  bytesWritten?: number;
-  vertexCount?: number;
-  triangleCount?: number;
-  coveragePercent?: number;
-  overfillPercent?: number;
-  data: Uint8Array | GltfOutput;
-};
+export type ConversionResult =
+  | {
+    outputFormat: 'ssk';
+    pieceCount: number;
+    bytesWritten: number;
+    data: string;
+  }
+  | {
+    outputFormat: 'sskb' | 'glb';
+    pieceCount: number;
+    bytesWritten: number;
+    vertexCount?: number;
+    triangleCount?: number;
+    data: Uint8Array;
+  }
+  | {
+    outputFormat: 'gltf';
+    pieceCount: number;
+    vertexCount: number;
+    triangleCount: number;
+    data: GltfOutput;
+  };
 
 export type GltfOutput = {
   json: unknown;

@@ -1,6 +1,6 @@
 {
   "name": "@ferroit/ssk",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "SolidSKeleton tessellation and format tools",
   "type": "module",
   "license": "MIT",

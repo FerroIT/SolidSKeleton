@@ -8,6 +8,7 @@ import { tessellate } from './tessellate.js';
 import type { ConversionFormat, ConversionResult, MeshData, ResolvedDocument, SSKDocument } from './types.js';
 import { sskToGltf } from './vecmath.js';
 import { validate } from './validate.js';
+import { writeSsk } from './writeSsk.js';
 import { writeSskb } from './writeSskb.js';
 export { importGltfToSsk, scoreDocument } from './gltfToSsk.js';
 export type { GltfImportOptions, GltfImportResult, QualityMetrics } from './gltfToSsk.js';
@@ -30,12 +31,32 @@ export function validateDocument(doc: SSKDocument): ResolvedDocument {
   return resolved;
 }
 
+export function convertDocument(
+  doc: SSKDocument,
+  outputFormat: 'ssk',
+  options?: { resolution?: number; binUri?: string },
+): Promise<Extract<ConversionResult, { outputFormat: 'ssk' }>>;
+export function convertDocument(
+  doc: SSKDocument,
+  outputFormat: 'sskb' | 'glb',
+  options?: { resolution?: number; binUri?: string },
+): Promise<Extract<ConversionResult, { outputFormat: 'sskb' | 'glb' }>>;
+export function convertDocument(
+  doc: SSKDocument,
+  outputFormat: 'gltf',
+  options?: { resolution?: number; binUri?: string },
+): Promise<Extract<ConversionResult, { outputFormat: 'gltf' }>>;
 export async function convertDocument(
   doc: SSKDocument,
   outputFormat: ConversionFormat,
   options: { resolution?: number; binUri?: string } = {},
 ): Promise<ConversionResult> {
   const resolved = validateDocument(doc);
+  if (outputFormat === 'ssk') {
+    const data = writeSsk(doc);
+    return { outputFormat, pieceCount: resolved.pieces.length, bytesWritten: new TextEncoder().encode(data).length, data };
+  }
+
   if (outputFormat === 'sskb') {
     const data = writeSskb(doc);
     return { outputFormat, pieceCount: resolved.pieces.length, bytesWritten: data.length, data };

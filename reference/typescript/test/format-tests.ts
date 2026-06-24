@@ -5,6 +5,7 @@ import {
   evaluate,
   parseSsk,
   parseSskb,
+  writeSsk,
   writeSskb,
   type ResolvedPiece,
   type SSKDocument,
@@ -64,6 +65,9 @@ const source: SSKDocument = {
   properties: { meta: { enabled: true, label: 'round-trip' } },
 };
 assert.deepEqual(documentDifferences(source, parseSskb(writeSskb(source))), []);
+
+const sourceSsk = writeSsk(source);
+assert.deepEqual(documentDifferences(source, parseSsk(sourceSsk)), []);
 
 await assertBooleanRejectsOpenMesh();
 

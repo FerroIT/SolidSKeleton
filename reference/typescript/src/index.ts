@@ -26,6 +26,7 @@ export { parseSskb } from './parseSskb.js';
 export { resolve } from './resolve.js';
 export { tessellate } from './tessellate.js';
 export { validate } from './validate.js';
+export { writeSsk } from './writeSsk.js';
 export { writeSskb } from './writeSskb.js';
 export type {
   ConversionFormat,
