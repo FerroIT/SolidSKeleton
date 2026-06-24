@@ -1,5 +1,11 @@
 # SolidSKeleton Reference Implementations
 
+The current reference implimentations should be treated like references, things such as tessilation resolution, abstract choises etc.. need to be taken with a grain of salt. these are currently in use in FerroIT's products and will be developed to suit the general need of said products and implimentations.
+
+For future tessilation, SCG calculations etc.. there are plans to create a local only lower level general package without as many abstract choises. 🫡
+
+---
+
 - [python/](python/)
 - [typescript/](typescript/)
 
