@@ -1,4 +1,8 @@
 # SolidSKeleton
+Usefull links: 
+<br>
+
+
 <a href="https://pypi.org/project/ssk">
   <img src="https://img.shields.io/badge/PyPI-ssk-blue?logo=python" alt="PyPI">
 </a>
@@ -8,6 +12,9 @@
 <a href="https://www.ferroit.com/">
   <img src="https://img.shields.io/badge/Website-ferroit.com-111111" alt="Website">
 </a>
+<br>
+
+*Reference implimentations are not part of the SSK standard*
 
 ---
 
