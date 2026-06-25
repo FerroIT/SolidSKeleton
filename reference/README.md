@@ -4,8 +4,6 @@ The current reference implimentations should be treated like referenses, things 
 
 For future tessilation, CSG calculations etc.. there are plans to create a local only, lower level (WASM) general parser without as many abstract choises, this will replace the logic of both python and typescript to run on the new CSG and tessilation logic and will cause both packages to be release under the v1.5.0 version number. 🫡
 
-see more about this in [ROADMAP](../ROADMAP.MD)
-
 ---
 
 - [python/](python/)
