@@ -40,7 +40,7 @@ jobs:
           import glob, os, shutil, sysconfig
           platlib = sysconfig.get_path('platlib')
           for src in glob.glob(os.path.join(platlib, 'ssklib', '_core*.so')):
-              shutil.copy(src, 'reference/python/ssklib/')
+              shutil.copy(src, 'ssklib/')
           "
 
       - name: Run conformance tests
@@ -85,7 +85,7 @@ jobs:
           import glob, os, shutil, sysconfig
           platlib = sysconfig.get_path('platlib')
           for src in glob.glob(os.path.join(platlib, 'ssklib', '_core*.so')):
-              shutil.copy(src, 'reference/python/ssklib/')
+              shutil.copy(src, 'ssklib/')
           "
 
       - name: Set up Node.js
