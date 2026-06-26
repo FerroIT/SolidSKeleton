@@ -5,10 +5,11 @@ const { spawnSync } = require('node:child_process');
 const root = resolve(__dirname, '..', '..', '..');
 const sourceOut = join(__dirname, '..', 'src', 'wasm');
 const distOut = join(__dirname, '..', 'dist', 'wasm');
+const tempOut = join(__dirname, '..', 'dist', '.wasm-build');
 const env = { ...process.env, PATH: buildPath(), CMAKE_GENERATOR: process.env.CMAKE_GENERATOR || 'Ninja' };
 
-rmSync(sourceOut, { recursive: true, force: true });
-mkdirSync(sourceOut, { recursive: true });
+rmSync(tempOut, { recursive: true, force: true });
+mkdirSync(tempOut, { recursive: true });
 
 run(wasmPackCommand(), [
   'build',
@@ -17,17 +18,21 @@ run(wasmPackCommand(), [
   'web',
   '--release',
   '--out-dir',
-  sourceOut,
+  tempOut,
   '--out-name',
   'ssk_core',
   '--no-default-features',
   '--features',
   'wasm',
 ]);
-rmSync(join(sourceOut, '.gitignore'), { force: true });
+rmSync(join(tempOut, '.gitignore'), { force: true });
+
+rmSync(sourceOut, { recursive: true, force: true });
+copyDir(tempOut, sourceOut);
 
 rmSync(distOut, { recursive: true, force: true });
 copyDir(sourceOut, distOut);
+rmSync(tempOut, { recursive: true, force: true });
 
 function run(command, args) {
   const result = spawnSync(command, args, { stdio: 'inherit', env, shell: process.platform === 'win32' });

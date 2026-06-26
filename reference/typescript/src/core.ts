@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import { SSKError } from './error.js';
 import type { MeshData, Point, ResolvedDocument, ResolvedPiece } from './types.js';
 import { sskToGltf } from './vecmath.js';
@@ -25,10 +23,20 @@ export async function meshDocumentFromCore(doc: ResolvedDocument, options: { res
 
 function initRustCore(): Promise<void> {
   coreReady ??= (async () => {
-    const wasm = readFileSync(new URL('./wasm/ssk_core_bg.wasm', import.meta.url));
-    await initCore({ module_or_path: wasm });
+    const wasmUrl = new URL('./wasm/ssk_core_bg.wasm', import.meta.url);
+    await initCore({ module_or_path: isNodeRuntime() ? await readNodeFile(wasmUrl) : wasmUrl });
   })();
   return coreReady;
+}
+
+function isNodeRuntime(): boolean {
+  return typeof process !== 'undefined' && Boolean(process.versions?.node);
+}
+
+async function readNodeFile(url: URL): Promise<Uint8Array> {
+  const nodeImport = new Function('specifier', 'return import(specifier)') as (specifier: string) => Promise<{ readFile: (path: URL) => Promise<Uint8Array> }>;
+  const { readFile } = await nodeImport('node:fs/promises');
+  return readFile(url);
 }
 
 function coreDocument(doc: ResolvedDocument) {

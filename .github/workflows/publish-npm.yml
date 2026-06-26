@@ -3,6 +3,7 @@ name: Publish to npm
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -49,6 +50,14 @@ jobs:
         working-directory: reference/typescript
         run: npm ci
 
+      - name: Build package
+        working-directory: reference/typescript
+        run: npm run build
+
+      - name: Check package contents
+        working-directory: reference/typescript
+        run: npm pack --dry-run --ignore-scripts
+
       - name: Publish to npm
         working-directory: reference/typescript
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --ignore-scripts

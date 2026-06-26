@@ -1,6 +1,6 @@
 # SolidSKeleton TypeScript
 
-Node ESM package.
+ESM package for browsers and Node.js.
 
 ```sh
 npm install @ferroit/ssk
@@ -36,5 +36,6 @@ import { parseSsk, parseSskb, resolve, validate, writeSsk, writeSskb } from '@fe
 ## Notes
 
 - Mesh output defaults to resolution 32.
+- The Rust core is shipped as WebAssembly in the npm package. Browser bundlers must keep `dist/wasm/ssk_core_bg.wasm` next to `dist/wasm/ssk_core.js` or serve it as an emitted asset.
 - GLB import reconstructs (estimated) SSK-native primitives where practical and reports sampled volume coverage and overfill percentages. `expectedPieceCount` is a soft guide, not an exact target. Import weight options (`infillWeight`, `outfillWeight`, `complexityWeight`) tune the scoring between candidates on a normalised 0–1 scale.
 - glTF output uses unindexed meshes with flat per-face normals.
