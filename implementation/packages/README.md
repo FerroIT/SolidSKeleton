@@ -1,8 +1,8 @@
 # SolidSKeleton Reference Implementations
 
-The current reference implementations should be treated as references. Tessellation resolution and package-level choices are implementation details, not part of the format standard. These packages are used in FerroIT products, but their role in this repository is to show working platform wrappers around the format and core mesh engine.
+These packages are reference implementations. Tessellation resolution and package-level choices are implementation details, not part of the format specification. These packages are used in FerroIT products, but their role in this repository is to show working platform wrappers around the format and core mesh engine.
 
-The Python and TypeScript packages are platform wrappers. They own file parsing, validation, GLTF/GLB import, and file construction. SSK-to-mesh tessellation and CSG are delegated to the shared core in [../core/](../core/).
+The Python and TypeScript packages are platform wrappers. They handle file parsing, validation, GLB/glTF import, and file serialization. SSK-to-mesh tessellation and CSG are delegated to the shared core in [../core/](../core/).
 
 ---
 

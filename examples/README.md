@@ -2,16 +2,16 @@
 
 This directory contains folders with example `.ssk` files that demonstrate valid SolidSKeleton documents.
 
-All files in this example directory have been parsed through the reference scripts in `/implementation/packages` and rendered in the [glTF Viewer](https://gltf-viewer.donmccurdy.com/) by Don McCurdy.
+All files in this example directory have been parsed through the reference packages in [../implementation/packages/](../implementation/packages/) and rendered in the [glTF Viewer](https://gltf-viewer.donmccurdy.com/) by Don McCurdy.
 
 ---
 
 ## `csg_cube.ssk` / `csg_cube.sskb`
-A CSG example cube using `add`, `subtract`, and `intersect`
+A cube demonstrating `add`, `subtract`, and `intersect` CSG operations
 
 The `.ssk` file is *943 bytes* and the `.sskb` file is *314 bytes*.
 
-The CSG cube uses many core CSG principles.
+The CSG cube demonstrates core boolean operations.
 
 <img src="csg_cube/csg_cube.png" alt="csg_cube.png" width="128"/>
 
@@ -22,7 +22,7 @@ A ladder with 14 steps
 
 The `.ssk` file is *2347 bytes* and the `.sskb` file is *870 bytes*.
 
-The ladder describes the use of the `from` class strongly.
+The ladder demonstrates repeated `from` references.
 
 <img src="ladder/ladder.png" alt="ladder_upright.png" width="128"/>
 

@@ -2,7 +2,7 @@
 
 ESM package for browsers and Node.js.
 
-The package is a reference implementation for reading, validating, writing, tessellating, and importing SolidSKeleton documents. Format rules are defined by the repository specifications, not by package implementation details.
+This package is a reference implementation for reading, validating, writing, tessellating, and importing SolidSKeleton documents. Format rules are defined by the repository specifications, not by package implementation details.
 
 ```sh
 npm install @ferroit/ssk
@@ -53,9 +53,9 @@ console.log(inspectDocument(document));
 
 `load` only parses. `validateDocument`, `convertDocument`, and `inspectDocument` all resolve inheritance and validate structure.
 
-## Estimate SSK from GLB
+## Estimate SSK from GLB/glTF
 
-GLB/GLTF import is an estimated reconstruction, not a reversible conversion. The importer generates SSK-native candidates where practical, scores them against the source mesh, and returns the best candidate with coverage and overfill metrics.
+GLB/glTF import is an estimated reconstruction, not a reversible conversion. The importer generates SSK-native candidates where practical, scores them against the source mesh, and returns the best candidate with coverage and overfill metrics.
 
 ```ts
 import { importGltfToSsk, writeSsk } from '@ferroit/ssk';

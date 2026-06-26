@@ -2,7 +2,7 @@
 
 Python 3.10+.
 
-The package is a reference implementation for reading, validating, writing, tessellating, and importing SolidSKeleton documents. Format rules are defined by the repository specifications, not by package implementation details.
+This package is a reference implementation for reading, validating, writing, tessellating, and importing SolidSKeleton documents. Format rules are defined by the repository specifications, not by package implementation details.
 
 ```sh
 pip install ssk
@@ -19,7 +19,7 @@ ssk validate model.ssk
 ssk inspect model.sskb
 ```
 
-Convert SSK/SSKB to another exact SSK representation or to a tessellated mesh:
+Convert between SSK/SSKB, or to a tessellated mesh:
 
 ```sh
 ssk convert model.ssk model.sskb
@@ -28,7 +28,7 @@ ssk convert model.ssk model.glb --resolution 64
 ssk convert model.sskb model.gltf
 ```
 
-Estimate an SSK document from a GLB/GLTF mesh:
+Estimate an SSK document from a GLB/glTF mesh:
 
 ```sh
 ssk convert model.glb estimated.ssk --expected-piece-count 12
@@ -79,9 +79,9 @@ print(inspect_file("model.ssk"))
 
 `load` only parses. `validate_document`, `validate_file`, `convert`, and `inspect_file` all resolve inheritance and validate structure.
 
-## Estimate SSK from GLB
+## Estimate SSK from GLB/glTF
 
-GLB/GLTF import is an estimated reconstruction, not a reversible conversion. The importer generates SSK-native candidates where practical, scores them against the source mesh, and returns the best candidate with coverage and overfill metrics.
+GLB/glTF import is an estimated reconstruction, not a reversible conversion. The importer generates SSK-native candidates where practical, scores them against the source mesh, and returns the best candidate with coverage and overfill metrics.
 
 ```py
 from pathlib import Path
@@ -132,5 +132,5 @@ from ssklib import parse_ssk, parse_sskb, resolve, validate, write_glb, write_gl
 
 - Mesh output defaults to resolution 32.
 - `write_ssk(document)` returns text. `write_sskb(document)` returns bytes. Use `convert(...)` when you want file paths handled for you.
-- GLB/GLTF import is approximate and reports sampled volume coverage and overfill percentages.
-- GLTF output uses unindexed meshes with flat per-face normals.
+- GLB/glTF import is approximate and reports sampled volume coverage and overfill percentages.
+- glTF output uses unindexed meshes with flat per-face normals.
