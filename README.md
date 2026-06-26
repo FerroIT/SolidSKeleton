@@ -45,17 +45,18 @@ Read in order:
 2. [spec/format/ssk/SPEC.md](spec/format/ssk/SPEC.md): `.ssk` text encoding
 3. [spec/format/sskb/SPEC.md](spec/format/sskb/SPEC.md): `.sskb` binary encoding
 
-## Reference
+## Packages
 
 See [implementation/packages/](implementation/packages/).
+
+## Core
+
+See [implementation/core/](implementation/core/).
 
 ## Examples
 
 See [examples/](examples/).
 
-## Roadmap
-
-See [deprecations/files/ROADMAP.md](deprecations/files/ROADMAP.md).
 
 ## License
 
