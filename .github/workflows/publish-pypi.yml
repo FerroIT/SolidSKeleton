@@ -13,25 +13,32 @@ jobs:
     uses: ./.github/workflows/test.yml
 
   linux:
-    name: Build Linux wheels (${{ matrix.target }})
+    name: Build Linux wheels (${{ matrix.platform.name }})
     runs-on: ubuntu-24.04
     needs: test
     strategy:
+      fail-fast: false
       matrix:
-        target: [x86_64, aarch64]
+        platform:
+          - name: x86_64
+            target: x86_64
+            manylinux: 2_28
+          - name: aarch64
+            target: aarch64
+            manylinux: 2_28
     steps:
       - uses: actions/checkout@v5
 
       - uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
-          args: --release --out dist
-          manylinux: auto
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ matrix.platform.manylinux }}
+          args: --release --out dist --compatibility pypi
           working-directory: reference/python
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-${{ matrix.target }}
+          name: wheels-linux-${{ matrix.platform.name }}
           path: reference/python/dist
 
   windows:
@@ -59,11 +66,19 @@ jobs:
           path: reference/python/dist
 
   macos:
-    name: Build macOS wheels (Python ${{ matrix.python }})
-    runs-on: macos-15
+    name: Build macOS wheels (${{ matrix.platform.name }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.platform.os }}
     needs: test
     strategy:
+      fail-fast: false
       matrix:
+        platform:
+          - name: x86_64
+            os: macos-13
+            target: x86_64-apple-darwin
+          - name: arm64
+            os: macos-15
+            target: aarch64-apple-darwin
         python: ['3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v5
@@ -74,12 +89,13 @@ jobs:
 
       - uses: PyO3/maturin-action@v1
         with:
-          args: --release --out dist --target universal2-apple-darwin
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --compatibility pypi
           working-directory: reference/python
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-${{ matrix.python }}
+          name: wheels-macos-${{ matrix.platform.name }}-${{ matrix.python }}
           path: reference/python/dist
 
   publish:
