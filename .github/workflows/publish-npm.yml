@@ -52,6 +52,8 @@ jobs:
 
       - name: Build package
         working-directory: reference/typescript
+        env:
+          SSK_REBUILD_WASM: '1'
         run: npm run build
 
       - name: Check package contents

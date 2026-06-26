@@ -8,6 +8,12 @@ const distOut = join(__dirname, '..', 'dist', 'wasm');
 const tempOut = join(__dirname, '..', 'dist', '.wasm-build');
 const env = { ...process.env, PATH: buildPath(), CMAKE_GENERATOR: process.env.CMAKE_GENERATOR || 'Ninja' };
 
+if (process.env.SSK_REBUILD_WASM !== '1' && existsSync(join(sourceOut, 'ssk_core.js')) && existsSync(join(sourceOut, 'ssk_core_bg.wasm'))) {
+  rmSync(distOut, { recursive: true, force: true });
+  copyDir(sourceOut, distOut);
+  process.exit(0);
+}
+
 rmSync(tempOut, { recursive: true, force: true });
 mkdirSync(tempOut, { recursive: true });
 
