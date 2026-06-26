@@ -34,33 +34,43 @@ function hasLeadingDirective(text: string): boolean {
   return false;
 }
 
-function rejectYamlFeatures(node: Node | null): void {
-  if (!node) return;
-  if (isAlias(node)) throw new SSKError('YAML aliases are not valid in .ssk');
-  const maybeAnchor = node as Node & { anchor?: string; tag?: string };
-  if (sourceTokenHasType((node as { srcToken?: unknown }).srcToken, 'tag')) throw new SSKError('YAML explicit tags are not valid in .ssk');
-  if (maybeAnchor.anchor) throw new SSKError('YAML anchors are not valid in .ssk');
-  if (maybeAnchor.tag && maybeAnchor.tag.startsWith('!')) throw new SSKError('YAML explicit tags are not valid in .ssk');
-  if (isMap(node)) {
-    for (const item of node.items) {
-      if (sourceTokenHasType((item as { srcToken?: unknown }).srcToken, 'tag')) throw new SSKError('YAML explicit tags are not valid in .ssk');
-      if (!isScalar(item.key) || typeof item.key.value !== 'string') throw new SSKError('mapping keys must be strings');
-      rejectYamlFeatures(item.key as Node | null);
-      rejectYamlFeatures(item.value as Node | null);
+function rejectYamlFeatures(root: Node | null): void {
+  const stack: (Node | null)[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node) continue;
+    if (isAlias(node)) throw new SSKError('YAML aliases are not valid in .ssk');
+    const maybeAnchor = node as Node & { anchor?: string; tag?: string };
+    if (sourceTokenHasType((node as { srcToken?: unknown }).srcToken, 'tag')) throw new SSKError('YAML explicit tags are not valid in .ssk');
+    if (maybeAnchor.anchor) throw new SSKError('YAML anchors are not valid in .ssk');
+    if (maybeAnchor.tag && maybeAnchor.tag.startsWith('!')) throw new SSKError('YAML explicit tags are not valid in .ssk');
+    if (isMap(node)) {
+      for (const item of node.items) {
+        if (sourceTokenHasType((item as { srcToken?: unknown }).srcToken, 'tag')) throw new SSKError('YAML explicit tags are not valid in .ssk');
+        if (!isScalar(item.key) || typeof item.key.value !== 'string') throw new SSKError('mapping keys must be strings');
+        stack.push(item.key as Node | null);
+        stack.push(item.value as Node | null);
+      }
+    } else if (isSeq(node)) {
+      for (const item of node.items) stack.push(item as Node | null);
     }
-  } else if (isSeq(node)) {
-    for (const item of node.items) rejectYamlFeatures(item as Node | null);
-  } else if (isScalar(node)) {
-    return;
   }
 }
 
-function sourceTokenHasType(value: unknown, type: string): boolean {
-  if (!value || typeof value !== 'object') return false;
-  if (Array.isArray(value)) return value.some((item) => sourceTokenHasType(item, type));
-  const token = value as Record<string, unknown>;
-  if (token.type === type) return true;
-  return Object.values(token).some((item) => sourceTokenHasType(item, type));
+function sourceTokenHasType(root: unknown, type: string): boolean {
+  const stack: unknown[] = [root];
+  while (stack.length > 0) {
+    const value = stack.pop();
+    if (!value || typeof value !== 'object') continue;
+    if (Array.isArray(value)) {
+      for (const item of value) stack.push(item);
+      continue;
+    }
+    const token = value as Record<string, unknown>;
+    if (token.type === type) return true;
+    for (const item of Object.values(token)) stack.push(item);
+  }
+  return false;
 }
 
 export function checkRoot(doc: Record<string, unknown>): void {

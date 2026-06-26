@@ -161,35 +161,38 @@ function numberValue(value: number): number {
   return value;
 }
 
-function compareValues(left: unknown, right: unknown, path: string, differences: string[], relTol: number, absTol: number, maxDiffs: number): void {
-  if (differences.length >= maxDiffs) return;
-  if (typeof left === 'number' && typeof right === 'number') {
-    if (!close(left, right, relTol, absTol)) differences.push(`${path}: ${left} != ${right}`);
-    return;
-  }
-  if (typeName(left) !== typeName(right)) {
-    differences.push(`${path}: ${typeName(left)} != ${typeName(right)}`);
-    return;
-  }
-  if (Array.isArray(left) && Array.isArray(right)) {
-    if (left.length !== right.length) {
-      differences.push(`${path}: length ${left.length} != ${right.length}`);
-      return;
+function compareValues(leftRoot: unknown, rightRoot: unknown, pathRoot: string, differences: string[], relTol: number, absTol: number, maxDiffs: number): void {
+  const stack: Array<[unknown, unknown, string]> = [[leftRoot, rightRoot, pathRoot]];
+  while (stack.length > 0 && differences.length < maxDiffs) {
+    const [left, right, path] = stack.pop()!;
+    if (typeof left === 'number' && typeof right === 'number') {
+      if (!close(left, right, relTol, absTol)) differences.push(`${path}: ${left} != ${right}`);
+      continue;
     }
-    left.forEach((value, index) => compareValues(value, right[index], `${path}[${index}]`, differences, relTol, absTol, maxDiffs));
-    return;
+    if (typeName(left) !== typeName(right)) {
+      differences.push(`${path}: ${typeName(left)} != ${typeName(right)}`);
+      continue;
+    }
+    if (Array.isArray(left) && Array.isArray(right)) {
+      if (left.length !== right.length) {
+        differences.push(`${path}: length ${left.length} != ${right.length}`);
+        continue;
+      }
+      for (let i = left.length - 1; i >= 0; i--) stack.push([left[i], right[i], `${path}[${i}]`]);
+      continue;
+    }
+    if (left && typeof left === 'object' && right && typeof right === 'object') {
+      const leftObj = left as Record<string, unknown>;
+      const rightObj = right as Record<string, unknown>;
+      const leftKeys = new Set(Object.keys(leftObj));
+      const rightKeys = new Set(Object.keys(rightObj));
+      for (const key of [...leftKeys].filter((key) => !rightKeys.has(key)).sort()) differences.push(`${path}.${key}: missing on right`);
+      for (const key of [...rightKeys].filter((key) => !leftKeys.has(key)).sort()) differences.push(`${path}.${key}: missing on left`);
+      for (const key of [...leftKeys].filter((key) => rightKeys.has(key)).sort().reverse()) stack.push([leftObj[key], rightObj[key], `${path}.${key}`]);
+      continue;
+    }
+    if (left !== right) differences.push(`${path}: ${String(left)} != ${String(right)}`);
   }
-  if (left && typeof left === 'object' && right && typeof right === 'object') {
-    const leftObj = left as Record<string, unknown>;
-    const rightObj = right as Record<string, unknown>;
-    const leftKeys = new Set(Object.keys(leftObj));
-    const rightKeys = new Set(Object.keys(rightObj));
-    for (const key of [...leftKeys].filter((key) => !rightKeys.has(key)).sort()) differences.push(`${path}.${key}: missing on right`);
-    for (const key of [...rightKeys].filter((key) => !leftKeys.has(key)).sort()) differences.push(`${path}.${key}: missing on left`);
-    for (const key of [...leftKeys].filter((key) => rightKeys.has(key)).sort()) compareValues(leftObj[key], rightObj[key], `${path}.${key}`, differences, relTol, absTol, maxDiffs);
-    return;
-  }
-  if (left !== right) differences.push(`${path}: ${String(left)} != ${String(right)}`);
 }
 
 function close(left: number, right: number, relTol: number, absTol: number): boolean {
