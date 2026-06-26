@@ -2,7 +2,7 @@
   "name": "ssk-core",
   "type": "module",
   "description": "Low-level SolidSKeleton tessellation and CSG engine",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "files": [
     "ssk_core_bg.wasm",
     "ssk_core.js",
