@@ -7,13 +7,12 @@ from pathlib import Path
 import struct
 from typing import Any
 
-import yaml
-
 from .error import SSKError
 from .parse_ssk import parse as parse_ssk
 from .parse_sskb import parse as parse_sskb
 from .resolve import resolve
 from .validate import validate
+from .write_ssk import write as write_ssk
 from .write_sskb import write as write_sskb
 
 
@@ -244,29 +243,9 @@ def import_gltf_to_ssk(*args, **kwargs):
 
 
 def mesh_document(doc: dict, *, resolution: int = DEFAULT_RESOLUTION):
-    import numpy as np
+    from .core import mesh_document as _mesh_document
 
-    from .boolean import evaluate
-    from .tessellate import tessellate
-    from .vecmath import ssk_to_gltf
-
-    pieces = sorted(doc['pieces'], key=lambda piece: piece['id'])
-    meshes = {}
-    for piece in pieces:
-        vertices, faces = tessellate(piece, resolution=resolution)
-        meshes[piece['id']] = (
-            (vertices, faces)
-            if vertices is not None and faces is not None and len(faces) > 0
-            else None
-        )
-
-    result = evaluate(pieces, meshes)
-    if result is None or len(result.faces) == 0:
-        return None, None
-
-    vertices = ssk_to_gltf(np.array(result.vertices, dtype=np.float64))
-    faces = np.array(result.faces, dtype=np.int32)
-    return vertices, faces
+    return _mesh_document(doc, resolution=resolution)
 
 
 def _write_gltf_output(vertices, faces, path: Path):
@@ -296,7 +275,7 @@ def _write_text(path: Path, text: str):
 
 
 def _dump_ssk(doc: dict) -> str:
-    return yaml.safe_dump(doc, sort_keys=False, allow_unicode=True)
+    return write_ssk(doc)
 
 
 def _read_declared_version(path: Path, doc: dict) -> str | None:

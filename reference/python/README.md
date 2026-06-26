@@ -55,12 +55,11 @@ quality = result.score_document(some_doc)
 Lower-level functions:
 
 ```py
-from ssklib import parse_ssk, parse_sskb, resolve, validate, write_sskb
+from ssklib import parse_ssk, parse_sskb, resolve, validate, write_glb, write_gltf, write_ssk, write_sskb
 ```
 
 ## Notes
 
 - Mesh output defaults to resolution 32.
-- GLTF/GLB import reconstructs (estimated) SSK-native primitives where practical and reports sampled volume coverage and overfill percentages. `expected_piece_count` / `--expected-piece-count` is a soft guide, not an exact target. Import weight options (`--infill-weight`, `--outfill-weight`, `--complexity-weight`) tune the scoring between candidates on a normalised 0–1 scale. Expect slightly different results from the TypeScript package due to numpy vs. JavaScript math differences.
-- CSG uses [trimesh](https://trimesh.org/) with [Manifold](https://github.com/elalish/manifold).
+- GLTF/GLB import reconstructs (estimated) SSK-native primitives where practical and reports sampled volume coverage and overfill percentages. `expected_piece_count` / `--expected-piece-count` is a soft guide, not an exact target. Import weight options (`--infill-weight`, `--outfill-weight`, `--complexity-weight`) tune the scoring between candidates on a normalised 0–1 scale.
 - glTF output uses unindexed meshes with flat per-face normals.

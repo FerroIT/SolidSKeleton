@@ -1,0 +1,24 @@
+[package]
+name = "ssk-core"
+version = "1.5.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Low-level SolidSKeleton tessellation and CSG engine"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[features]
+default = []
+python = ["pyo3/extension-module"]
+wasm = ["wasm-bindgen", "manifold-csg/unstable-wasm-uu"]
+
+[dependencies]
+manifold-csg = "0.3.1"
+pyo3 = { version = "0.25", optional = true }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wasm-bindgen = { version = "=0.2.100", optional = true }
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"

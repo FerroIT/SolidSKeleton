@@ -2,12 +2,10 @@ import assert from 'node:assert/strict';
 
 import {
   documentDifferences,
-  evaluate,
   parseSsk,
   parseSskb,
   writeSsk,
   writeSskb,
-  type ResolvedPiece,
   type SSKDocument,
 } from '../src/index.js';
 
@@ -69,26 +67,7 @@ assert.deepEqual(documentDifferences(source, parseSskb(writeSskb(source))), []);
 const sourceSsk = writeSsk(source);
 assert.deepEqual(documentDifferences(source, parseSsk(sourceSsk)), []);
 
-await assertBooleanRejectsOpenMesh();
-
 console.log('ok format validation');
-
-async function assertBooleanRejectsOpenMesh(): Promise<void> {
-  const piece: ResolvedPiece = {
-    id: 0,
-    points: [{ x: 0, y: 0, z: 0 }],
-    size: { x: 1, y: 1, z: 1 },
-    shape: 'ngon',
-    sides: 4,
-  };
-  await assert.rejects(
-    () => evaluate(
-      [piece],
-      new Map([[0, { vertices: [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]], faces: [[0, 1, 2], [0, 2, 3]] }]]),
-    ),
-    /piece 0 \(add\): manifold import failed[\s\S]*boundary_edges=4/,
-  );
-}
 
 function sskb(options: { major?: number; minor?: number; pieces?: Uint8Array[]; rootProperties?: string | Uint8Array } = {}): Uint8Array {
   const pieces = options.pieces ?? [];

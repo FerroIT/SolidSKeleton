@@ -36,9 +36,9 @@ function unindex(mesh: MeshData): MeshData & { normals: number[][] } {
   const normals: number[][] = [];
   const faces: number[][] = [];
   mesh.faces.forEach((face, faceIndex) => {
-    const v0 = mesh.vertices[face[0]];
-    const v1 = mesh.vertices[face[1]];
-    const v2 = mesh.vertices[face[2]];
+    const v0 = float32Vec(mesh.vertices[face[0]]);
+    const v1 = float32Vec(mesh.vertices[face[1]]);
+    const v2 = float32Vec(mesh.vertices[face[2]]);
     const n = normal(v0, v1, v2);
     const base = faceIndex * 3;
     vertices.push(v0, v1, v2);
@@ -49,11 +49,19 @@ function unindex(mesh: MeshData): MeshData & { normals: number[][] } {
 }
 
 function normal(v0: number[], v1: number[], v2: number[]): number[] {
-  const a = [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]];
-  const b = [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]];
-  const n = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const a = [Math.fround(v1[0] - v0[0]), Math.fround(v1[1] - v0[1]), Math.fround(v1[2] - v0[2])];
+  const b = [Math.fround(v2[0] - v0[0]), Math.fround(v2[1] - v0[1]), Math.fround(v2[2] - v0[2])];
+  const n = [
+    Math.fround(Math.fround(a[1] * b[2]) - Math.fround(a[2] * b[1])),
+    Math.fround(Math.fround(a[2] * b[0]) - Math.fround(a[0] * b[2])),
+    Math.fround(Math.fround(a[0] * b[1]) - Math.fround(a[1] * b[0])),
+  ];
   const length = Math.hypot(n[0], n[1], n[2]);
-  return length < 1e-10 ? [0, 0, 0] : [n[0] / length, n[1] / length, n[2] / length];
+  return length < 1e-10 ? [0, 0, 0] : float32Vec([n[0] / length, n[1] / length, n[2] / length]);
+}
+
+function float32Vec(value: number[]): number[] {
+  return [Math.fround(value[0]), Math.fround(value[1]), Math.fround(value[2])];
 }
 
 function buffer(vertices: number[][], normals: number[][], faces: number[][]): Uint8Array {

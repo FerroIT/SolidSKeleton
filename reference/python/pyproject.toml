@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=77"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
 
 [project]
 name = "ssk"
-version = "1.1.1"
+version = "1.5.0"
 description = "SolidSKeleton tessellation and format tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -18,12 +18,10 @@ dependencies = [
   "pyyaml>=6.0",
   "numpy>=1.24",
   "trimesh>=4.0",
-  "manifold3d>=2.3",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Multimedia :: Graphics :: 3D Modeling",
@@ -38,6 +36,9 @@ Specifications = "https://github.com/FerroIT/SolidSKeleton/tree/main/format"
 [project.scripts]
 ssk = "ssklib.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["ssklib*", "ssk*"]
+[tool.maturin]
+manifest-path = "../../core/Cargo.toml"
+module-name = "ssklib._core"
+python-source = "."
+features = ["python"]
+include = ["ssklib/**/*.py", "ssk/**/*.py"]

@@ -9,11 +9,12 @@ REFERENCE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REFERENCE_ROOT))
 
 from ssklib.error import SSKError
-from ssklib.boolean import evaluate
+from ssklib.api import document_differences
 from ssklib.parse_ssk import parse as parse_ssk
 from ssklib.parse_sskb import parse as parse_sskb
 from ssklib.resolve import resolve
 from ssklib.validate import validate
+from ssklib.write_ssk import write as write_ssk
 from ssklib.write_sskb import write as write_sskb
 
 
@@ -93,29 +94,9 @@ class InheritanceAndValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(SSKError, 'booleans are not valid numbers|finite number'):
             validate(doc)
 
-
-class BooleanDiagnosticsTests(unittest.TestCase):
-    def test_subtract_failure_names_piece_context_and_mesh_health(self):
-        pieces = [
-            {'id': 0, 'mode': 'add'},
-            {'id': 1, 'mode': 'subtract'},
-        ]
-        meshes = {
-            0: (
-                [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
-                [[0, 1, 2], [0, 2, 3]],
-            ),
-            1: (
-                [[0, 0, -1], [2, 0, -1], [0, 2, -1], [0, 0, 1]],
-                [[0, 2, 1], [0, 1, 3], [1, 2, 3], [2, 0, 3]],
-            ),
-        }
-
-        with self.assertRaisesRegex(
-            SSKError,
-            'subtract piece 1 from piece 0.*boundary_edges=4',
-        ):
-            evaluate(pieces, meshes)
+    def test_write_ssk_round_trip(self):
+        doc = {'pieces': [piece(0, properties={'name': 'round-trip'})]}
+        self.assertEqual([], document_differences(doc, parse_ssk(write_ssk(doc))))
 
 
 class SSKBBinaryTests(unittest.TestCase):

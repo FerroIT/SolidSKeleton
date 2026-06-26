@@ -1,8 +1,8 @@
 # SolidSKeleton Reference Implementations
 
-The current reference implimentations should be treated like referenses, things such as tessilation resolution, abstract choises etc.. need to be taken with a grain of salt. While these packages are currently in use in FerroIT's products;  both packages are meant to show an existing implimentation, not to suit production use per se. That also means a change in these packages does not reflect the 1:1 aim for the SolidSKeleton SPEC or features, but rather a... reference.
+The current reference implementations should be treated as references. Tessellation resolution and package-level choices are implementation details, not part of the format standard. These packages are used in FerroIT products, but their role in this repository is to show working platform wrappers around the format and core mesh engine.
 
-For future tessilation, CSG calculations etc.. there are plans to create a local only, lower level (WASM) general parser without as many abstract choises, this will replace the logic of both python and typescript to run on the new CSG and tessilation logic and will cause both packages to be release under the v1.5.0 version number. 🫡
+The Python and TypeScript packages are platform wrappers. They own file parsing, validation, GLTF/GLB import, and file construction. SSK-to-mesh tessellation and CSG are delegated to the shared core in [../core/](../core/).
 
 ---
 
@@ -18,6 +18,7 @@ python -m unittest discover -s reference/python/tests -p test_conformance.py
 python -m unittest discover -s reference/python/tests -p test_format_validation.py
 python -m unittest discover -s reference/python/tests -p test_examples.py
 python -m unittest discover -s reference/python/tests -p test_example_sweep.py
+python -m unittest discover -s reference/python/tests -p test_gltf_to_ssk.py
 ```
 
 Run TypeScript checks from `reference/typescript`:
@@ -25,6 +26,8 @@ Run TypeScript checks from `reference/typescript`:
 ```sh
 npm run typecheck
 npm run test:format
+npm run test:gltf
 npm run test:examples
 npm pack --dry-run
 ```
+

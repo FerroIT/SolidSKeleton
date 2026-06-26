@@ -1,12 +1,10 @@
-import { evaluate } from './boolean.js';
+import { meshDocumentFromCore } from './core.js';
 import { SSKError } from './error.js';
 import { writeGlb, writeGltf } from './gltf.js';
 import { parseSsk } from './parseSsk.js';
 import { parseSskb } from './parseSskb.js';
 import { resolve } from './resolve.js';
-import { tessellate } from './tessellate.js';
 import type { ConversionFormat, ConversionResult, MeshData, ResolvedDocument, SSKDocument } from './types.js';
-import { sskToGltf } from './vecmath.js';
 import { validate } from './validate.js';
 import { writeSsk } from './writeSsk.js';
 import { writeSskb } from './writeSskb.js';
@@ -134,12 +132,7 @@ export function documentsEquivalent(left: SSKDocument, right: SSKDocument, optio
 }
 
 export async function meshDocument(doc: ResolvedDocument, options: { resolution?: number } = {}): Promise<MeshData | null> {
-  const pieces = [...doc.pieces].sort((a, b) => a.id - b.id);
-  const meshes = new Map<number, MeshData | null>();
-  for (const piece of pieces) meshes.set(piece.id, tessellate(piece, { resolution: options.resolution }));
-  const result = await evaluate(pieces, meshes);
-  if (!result || result.faces.length === 0) return null;
-  return { vertices: sskToGltf(result.vertices), faces: result.faces };
+  return meshDocumentFromCore(doc, options);
 }
 
 function counts(values: string[]): Record<string, number> {

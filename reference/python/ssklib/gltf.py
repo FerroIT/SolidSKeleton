@@ -90,8 +90,8 @@ def _gltf_json(verts, norms, faces, buf_len, bin_uri=None):
         'accessors': [
             {'bufferView': 0, 'byteOffset': 0, 'componentType': 5126,
              'count': nv, 'type': 'VEC3',
-             'min': verts.min(axis=0).tolist(),
-             'max': verts.max(axis=0).tolist()},
+             'min': _json_vec(verts.min(axis=0)),
+             'max': _json_vec(verts.max(axis=0))},
             {'bufferView': 1, 'byteOffset': 0, 'componentType': 5126,
              'count': nv, 'type': 'VEC3'},
             {'bufferView': 2, 'byteOffset': 0, 'componentType': 5125,
@@ -104,3 +104,15 @@ def _gltf_json(verts, norms, faces, buf_len, bin_uri=None):
         ],
         'buffers': [buf_entry],
     }
+
+
+def _json_vec(values):
+    return [_json_number(float(value)) for value in values]
+
+
+def _json_number(value):
+    if value == 0:
+        return 0
+    if value.is_integer():
+        return int(value)
+    return value

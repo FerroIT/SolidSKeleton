@@ -27,10 +27,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e reference/python
+          python -m pip install maturin
+          cd reference/python && maturin develop
 
       - name: Run conformance tests
         run: |
@@ -86,11 +90,10 @@ jobs:
         working-directory: reference/typescript
         run: npm run test:format
 
+      - name: Run TypeScript GLTF import tests
+        working-directory: reference/typescript
+        run: npm run test:gltf
+
       - name: Run TypeScript example tests
         working-directory: reference/typescript
         run: npm run test:examples
-
-      - name: Check TypeScript package
-        working-directory: reference/typescript
-        run: |
-          npm pack --dry-run
