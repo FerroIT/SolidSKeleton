@@ -33,7 +33,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
-          args: --release --out dist --compatibility pypi
+          args: --release --out dist --find-interpreter --compatibility pypi
           working-directory: reference/python
 
       - uses: actions/upload-artifact@v4
@@ -69,6 +69,10 @@ jobs:
     name: Build macOS wheels (${{ matrix.platform.name }}, Python ${{ matrix.python }})
     runs-on: ${{ matrix.platform.os }}
     needs: test
+    env:
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform.deployment_target }}
+      CMAKE_OSX_DEPLOYMENT_TARGET: ${{ matrix.platform.deployment_target }}
+      RUSTFLAGS: -C link-arg=-mmacosx-version-min=${{ matrix.platform.deployment_target }}
     strategy:
       fail-fast: false
       matrix:
@@ -76,9 +80,11 @@ jobs:
           - name: x86_64
             os: macos-13
             target: x86_64-apple-darwin
+            deployment_target: '10.13'
           - name: arm64
             os: macos-15
             target: aarch64-apple-darwin
+            deployment_target: '11.0'
         python: ['3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v5
