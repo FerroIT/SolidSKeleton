@@ -36,6 +36,12 @@ jobs:
           python -m pip install maturin
           cd reference/python && maturin build --release --out dist
           pip install dist/*.whl
+          python -c "
+          import glob, os, shutil, sysconfig
+          platlib = sysconfig.get_path('platlib')
+          for src in glob.glob(os.path.join(platlib, 'ssklib', '_core*.so')):
+              shutil.copy(src, 'reference/python/ssklib/')
+          "
 
       - name: Run conformance tests
         run: |
@@ -66,10 +72,21 @@ jobs:
           python-version: '3.13'
           cache: pip
 
-      - name: Install Python dependencies
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python package
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r reference/python/requirements.txt
+          python -m pip install maturin
+          cd reference/python && maturin build --release --out dist
+          pip install dist/*.whl
+          python -c "
+          import glob, os, shutil, sysconfig
+          platlib = sysconfig.get_path('platlib')
+          for src in glob.glob(os.path.join(platlib, 'ssklib', '_core*.so')):
+              shutil.copy(src, 'reference/python/ssklib/')
+          "
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
