@@ -36,7 +36,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: '2_28'
-          args: --release --out dist --compatibility manylinux_2_28
+          args: --release --out dist
           working-directory: reference/python
 
       - uses: actions/upload-artifact@v4
