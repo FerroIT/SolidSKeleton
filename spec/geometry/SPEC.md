@@ -19,8 +19,8 @@ It defines:
 Text and binary encodings are defined separately:
 
 ```text
-format/ssk/SPEC.md
-format/sskb/SPEC.md
+../format/ssk/SPEC.md
+../format/sskb/SPEC.md
 ```
 
 ## 2. Document Model

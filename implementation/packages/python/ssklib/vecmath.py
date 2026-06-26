@@ -21,7 +21,7 @@ def project_onto_plane(v: NDArray, normal: NDArray) -> NDArray:
     return v - np.dot(v, normal) * normal
 
 
-# rotation  (geometry/SPEC.md 9)
+# rotation  (spec/geometry/SPEC.md 9)
 
 def rotation_matrix_xyz(rx: float, ry: float, rz: float) -> NDArray:
 
@@ -58,7 +58,7 @@ def minimal_rotation(v_from: NDArray, v_to: NDArray) -> NDArray:
     return np.eye(3, dtype=np.float64) + s * K + (1 - c) * (K @ K)
 
 
-# cubic Bezier  (geometry/SPEC.md 7)
+# cubic Bezier  (spec/geometry/SPEC.md 7)
 
 def cubic_bezier(p0: NDArray, p1: NDArray, p2: NDArray, p3: NDArray,
                  t: float) -> NDArray:
@@ -72,7 +72,7 @@ def cubic_bezier_deriv(p0: NDArray, p1: NDArray, p2: NDArray, p3: NDArray,
     return 3 * u**2 * (p1 - p0) + 6 * u * t * (p2 - p1) + 3 * t**2 * (p3 - p2)
 
 
-# transition curves  (geometry/SPEC.md 10.2)
+# transition curves  (spec/geometry/SPEC.md 10.2)
 
 def solve_transition(t1: tuple, t2: tuple, u_target: float) -> float:
 
@@ -98,7 +98,7 @@ def solve_transition(t1: tuple, t2: tuple, u_target: float) -> float:
     return 3 * u**2 * t * t1[1] + 3 * u * t**2 * t2[1] + t**3
 
 
-# interpolation  (geometry/SPEC.md 9.2, 10.1)
+# interpolation  (spec/geometry/SPEC.md 9.2, 10.1)
 
 def _shortest_angle_delta(a: float, b: float) -> float:
     d = (b - a) % 360.0

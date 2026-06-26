@@ -10,12 +10,12 @@ Applies to: `.ssk`
 
 This document defines how SolidSKeleton data is represented as text.
 
-The object structure defined here is also the shared structural reference for `.sskb`, except where `format/sskb/SPEC.md` defines binary-specific representation.
+The object structure defined here is also the shared structural reference for `.sskb`, except where `../sskb/SPEC.md` defines binary-specific representation.
 
 Geometry meaning and validation are defined in:
 
 ```text
-geometry/SPEC.md
+../../geometry/SPEC.md
 ```
 
 ## 2. Encoding
@@ -40,7 +40,7 @@ Duplicate mapping keys are invalid.
 
 Parsers may use standard YAML parsers, but must enforce the structure and type rules in this specification.
 
-A JSON Schema for structural validation is provided at `format/ssk/schema.json`. It does not validate all geometry rules.
+A JSON Schema for structural validation is provided at `schema.json`. It does not validate all geometry rules.
 
 ## 4. Root Object
 
@@ -177,7 +177,7 @@ Property keys must be strings.
 
 Property values may be null, booleans, finite numbers, strings, sequences, or nested mappings.
 
-Geometry rules for `properties` are defined in `geometry/SPEC.md`.
+Geometry rules for `properties` are defined in `../../geometry/SPEC.md`.
 
 ## 12. Optional Fields
 
@@ -198,7 +198,7 @@ The following fields are optional:
 - point `transition_in`
 - point `transition_out`
 
-Omitted optional fields decode as absent in the geometry model. Geometry defaults and interpretation are defined in `geometry/SPEC.md`.
+Omitted optional fields decode as absent in the geometry model. Geometry defaults and interpretation are defined in `../../geometry/SPEC.md`.
 
 In particular, omitted piece `rotation` is valid and has an effective geometry rotation of `x: 0, y: 0, z: 0` unless overridden by point `rotation`.
 
@@ -274,7 +274,7 @@ A conforming `.ssk` parser must:
 - reject structurally invalid documents
 - require `points`, `size`, and `shape` unless `from` is present
 
-Geometry validation is defined in `geometry/SPEC.md`.
+Geometry validation is defined in `../../geometry/SPEC.md`.
 
 ## 16. File Extension
 

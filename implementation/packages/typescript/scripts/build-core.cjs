@@ -2,7 +2,7 @@ const { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } = require('no
 const { join, resolve } = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-const root = resolve(__dirname, '..', '..', '..');
+const root = resolve(__dirname, '..', '..', '..', '..');
 const sourceOut = join(__dirname, '..', 'src', 'wasm');
 const distOut = join(__dirname, '..', 'dist', 'wasm');
 const tempOut = join(__dirname, '..', 'dist', '.wasm-build');
@@ -19,7 +19,7 @@ mkdirSync(tempOut, { recursive: true });
 
 run(wasmPackCommand(), [
   'build',
-  join(root, 'core'),
+  join(root, 'implementation', 'core'),
   '--target',
   'web',
   '--release',

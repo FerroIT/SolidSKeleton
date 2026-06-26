@@ -10,9 +10,9 @@ Applies to: `.sskb`
 
 This document defines only binary-specific storage, layout, and parser rules.
 
-Unless this document explicitly overrides representation, decoded `.sskb` data uses the same structure, required fields, optional fields, scalar types, enum names, list order, and property rules as `format/ssk/SPEC.md`.
+Unless this document explicitly overrides representation, decoded `.sskb` data uses the same structure, required fields, optional fields, scalar types, enum names, list order, and property rules as `../ssk/SPEC.md`.
 
-Geometry meaning and validation are defined in `geometry/SPEC.md`.
+Geometry meaning and validation are defined in `../../geometry/SPEC.md`.
 
 Binary-specific overrides:
 
@@ -35,7 +35,7 @@ Primitive types:
 
 All `f32` values must be finite. `NaN` and infinite values are invalid.
 
-Decoded values must also satisfy `format/ssk/SPEC.md` and `geometry/SPEC.md`.
+Decoded values must also satisfy `../ssk/SPEC.md` and `../../geometry/SPEC.md`.
 
 ## 3. File Header
 
@@ -214,7 +214,7 @@ A conforming `.sskb` parser must:
 
 Extra trailing bytes after the root property blob are invalid.
 
-Decoded data must satisfy `format/ssk/SPEC.md` structure rules and `geometry/SPEC.md` validation rules.
+Decoded data must satisfy `../ssk/SPEC.md` structure rules and `../../geometry/SPEC.md` validation rules.
 
 ## 9. File Extension
 

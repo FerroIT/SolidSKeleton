@@ -1,4 +1,4 @@
-# SolidSKeleton Deprecation List
+# SolidSKeleton Spec Deprecation List
 
 ## v0.2 -> v0.3
 `bezier_in` and `bezier_out` have been deprecated because they were renamed to `curve_in` and `curve_out`.

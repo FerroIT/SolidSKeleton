@@ -14,14 +14,14 @@ The Python and TypeScript packages are platform wrappers. They own file parsing,
 Run Python checks from the repository root:
 
 ```sh
-python -m unittest discover -s reference/python/tests -p test_conformance.py
-python -m unittest discover -s reference/python/tests -p test_format_validation.py
-python -m unittest discover -s reference/python/tests -p test_examples.py
-python -m unittest discover -s reference/python/tests -p test_example_sweep.py
-python -m unittest discover -s reference/python/tests -p test_gltf_to_ssk.py
+python -m unittest discover -s implementation/packages/python/tests -p test_conformance.py
+python -m unittest discover -s implementation/packages/python/tests -p test_format_validation.py
+python -m unittest discover -s implementation/packages/python/tests -p test_examples.py
+python -m unittest discover -s implementation/packages/python/tests -p test_example_sweep.py
+python -m unittest discover -s implementation/packages/python/tests -p test_gltf_to_ssk.py
 ```
 
-Run TypeScript checks from `reference/typescript`:
+Run TypeScript checks from `implementation/packages/typescript`:
 
 ```sh
 npm run typecheck

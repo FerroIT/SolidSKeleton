@@ -16,7 +16,7 @@ import {
   writeSskb,
 } from '../src/index.js';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const examples = join(root, 'examples');
 
 function walk(dir: string): string[] {
@@ -114,7 +114,7 @@ import tempfile
 from pathlib import Path
 
 root = Path(sys.argv[1])
-sys.path.insert(0, str(root / 'reference' / 'python'))
+sys.path.insert(0, str(root / 'implementation' / 'packages' / 'python'))
 
 from ssklib.api import canonical_document, load, mesh_document, validate_document
 from ssklib.gltf import write_glb, write_gltf

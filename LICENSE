@@ -1,0 +1,22 @@
+# Licenses
+
+This repository uses two licenses depending on the content:
+
+## Format & Geometry Specifications (`spec/format/`, `spec/geometry/`)
+
+The specification documents in the `spec/format/` and `spec/geometry/` directories are licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** license.
+
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+
+---
+
+## Examples & Reference Implementation (`examples/`, `implementation/`)
+
+The content in the `examples/` and `implementation/` directories is licensed under the **MIT License**.
+
+MIT https://opensource.org/license/mit
+
+
+---
+
+Full license files can be found under `licenses/`

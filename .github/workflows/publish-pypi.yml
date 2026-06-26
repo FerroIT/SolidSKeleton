@@ -37,12 +37,12 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: '2_28'
           args: --release --out dist
-          working-directory: reference/python
+          working-directory: implementation/packages/python
 
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.name }}
-          path: reference/python/dist/*.whl
+          path: implementation/packages/python/dist/*.whl
 
   windows:
     name: Windows x64
@@ -60,12 +60,12 @@ jobs:
           CMAKE_BUILD_PARALLEL_LEVEL: '2'
         with:
           args: --release --out dist
-          working-directory: reference/python
+          working-directory: implementation/packages/python
 
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-windows-x64
-          path: reference/python/dist/*.whl
+          path: implementation/packages/python/dist/*.whl
 
   macos:
     name: macOS ${{ matrix.name }}
@@ -96,12 +96,12 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: --release --out dist
-          working-directory: reference/python
+          working-directory: implementation/packages/python
 
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-macos-${{ matrix.name }}
-          path: reference/python/dist/*.whl
+          path: implementation/packages/python/dist/*.whl
 
   sdist:
     name: Source distribution
@@ -118,7 +118,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build sdist
-        working-directory: reference/python
+        working-directory: implementation/packages/python
         run: |
           python -m pip install --upgrade pip maturin
           maturin sdist --out dist
@@ -126,7 +126,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: sdist
-          path: reference/python/dist/*.tar.gz
+          path: implementation/packages/python/dist/*.tar.gz
 
   publish:
     name: Publish to PyPI

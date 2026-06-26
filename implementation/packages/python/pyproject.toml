@@ -31,7 +31,7 @@ classifiers = [
 Homepage = "https://github.com/FerroIT/SolidSKeleton"
 Repository = "https://github.com/FerroIT/SolidSKeleton"
 Issues = "https://github.com/FerroIT/SolidSKeleton/issues"
-Specifications = "https://github.com/FerroIT/SolidSKeleton/tree/main/format"
+Specifications = "https://github.com/FerroIT/SolidSKeleton/tree/main/spec"
 
 [project.scripts]
 ssk = "ssklib.cli:main"

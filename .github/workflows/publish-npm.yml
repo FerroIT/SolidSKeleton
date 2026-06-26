@@ -33,7 +33,7 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
           cache: npm
-          cache-dependency-path: reference/typescript/package-lock.json
+          cache-dependency-path: implementation/packages/typescript/package-lock.json
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -47,19 +47,19 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang-18 lld-18 libc++-18-dev libc++abi-18-dev
 
       - name: Install dependencies
-        working-directory: reference/typescript
+        working-directory: implementation/packages/typescript
         run: npm ci
 
       - name: Build package
-        working-directory: reference/typescript
+        working-directory: implementation/packages/typescript
         env:
           SSK_REBUILD_WASM: '1'
         run: npm run build
 
       - name: Check package contents
-        working-directory: reference/typescript
+        working-directory: implementation/packages/typescript
         run: npm pack --dry-run --ignore-scripts
 
       - name: Publish to npm
-        working-directory: reference/typescript
+        working-directory: implementation/packages/typescript
         run: npm publish --provenance --access public --ignore-scripts

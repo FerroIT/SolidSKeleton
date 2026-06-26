@@ -2,7 +2,7 @@
 
 This directory contains folders with example `.ssk` files that demonstrate valid SolidSKeleton documents.
 
-All files in this example directory have been parsed through the reference scripts in `/reference` and rendered in the [glTF Viewer](https://gltf-viewer.donmccurdy.com/) by Don McCurdy.
+All files in this example directory have been parsed through the reference scripts in `/implementation/packages` and rendered in the [glTF Viewer](https://gltf-viewer.donmccurdy.com/) by Don McCurdy.
 
 ---
 

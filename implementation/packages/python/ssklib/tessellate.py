@@ -48,7 +48,7 @@ def _cross_n(piece: dict, resolution: int) -> int:
     return piece.get('sides', resolution) if piece['shape'] == 'ngon' else resolution
 
 
-# point-defined piece  (geometry/SPEC.md 8.2)
+# point-defined piece  (spec/geometry/SPEC.md 8.2)
 
 def _point_defined(piece: dict, resolution: int):
     pt = piece['points'][0]
@@ -103,7 +103,7 @@ def _bipyramid(c, sx, sy, sz, R, sides):
     return np.array(vs, dtype=np.float64), np.array(fs, dtype=np.int32)
 
 
-# path-defined piece  (geometry/SPEC.md 8.1)
+# path-defined piece  (spec/geometry/SPEC.md 8.1)
 
 def _path_defined(piece: dict, resolution: int):
     points = piece['points']
@@ -245,7 +245,7 @@ def _eval_path(segs, piece, cn):
     return rings
 
 
-# frame construction  (geometry/SPEC.md 9.1)
+# frame construction  (spec/geometry/SPEC.md 9.1)
 
 def _init_frame(tangent, R_rot):
     lz = tangent
@@ -278,7 +278,7 @@ def _cross(pos, frame, size, shape, n):
             for i in range(n)]
 
 
-# caps  (geometry/SPEC.md 8.3)
+# caps  (spec/geometry/SPEC.md 8.3)
 
 def _cap(ring, piece, cn, is_start, resolution: int):
     sz = ring['size'][2]
