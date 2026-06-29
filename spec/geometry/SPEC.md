@@ -1,7 +1,7 @@
 # SolidSKeleton Geometry Specification
 
 Status: Current
-Version: 1.0rc1
+Version: 1.0
 
 ## 1. Purpose
 
@@ -431,6 +431,8 @@ Defined shapes:
 For a path-defined piece, `circle` defines a smooth cross-section using `size.x` and `size.y` as radii. If `size.x` and `size.y` are equal, the cross-section is circular. If they differ, the cross-section is elliptical.
 
 For a point-defined piece, `circle` defines an ellipsoidal form around the point using `size.x`, `size.y`, and `size.z` as radii.
+
+`sides` is ignored when `shape` is `circle`.
 
 ### 11.2 ngon
 

@@ -1,7 +1,7 @@
 # SSK Text Encoding Specification
 
 Status: Current
-Version: 1.0rc1
+Version: 1.0
 Applies to: `.ssk`
 
 ## 1. Purpose

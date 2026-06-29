@@ -31,11 +31,11 @@ The format is lightly typed and enforces strict structural constraints, allowing
 ### Project Status
 
 - Status: Current
-- Version: 1.0rc1
+- Version: 1.0
 - Author: Rogier Goossen
   
-As of 18-6-2026, this project has released its first release candidate, ***v1.0rc1***. The current SPEC and schemas are assumed final and will release as ***v1.0*** on 28-6-2026.
-The reference implementation packages will continue versioning under the v1.* prefix.
+As of 29-6-2026, the SolidSKeleton SPEC has been released under the stable ***v1.0*** version.
+Implementations will continue under the ***v1.**** version.
 
 ## Specifications
 
