@@ -1,8 +1,4 @@
 # SolidSKeleton
-Useful links:
-<br>
-
-
 <a href="https://pypi.org/project/ssk">
   <img src="https://img.shields.io/badge/PyPI-ssk-blue?logo=python" alt="PyPI">
 </a>
@@ -14,7 +10,7 @@ Useful links:
 </a>
 <br>
 
-*Reference implementations are not part of the SSK specification*
+<p style="font-size: 8px; color: grey">Reference implementations are not part of the SSK specification</p>
 
 ---
 
@@ -47,20 +43,28 @@ Read in order:
 
 ## Packages
 
-See [implementation/packages/](implementation/packages/).
+[implementation/packages/](implementation/packages/).
+
+The packages are API wrappers over the rust core @`implementation/core/` and in langauge mesh to ssk estimator. 
 
 ## Core
 
-See [implementation/core/](implementation/core/).
+[implementation/core/](implementation/core/).
+
+The rust core is dependents on [Manifold](https://github.com/elalish/manifold). The core is reference implimentation and is based on the SolidSKeleton SPEC.
 
 ## Examples
 
-See [examples/](examples/).
+[examples/](examples/).
+
+The examples includes screenshots, ssk, sskb and glb files.
 
 
 ## License
 
-See [LICENSE](LICENSE).
+[LICENSE](LICENSE).
+
+And the full license files can be found at [LICENSE](LICENSE/).
 
 ---
 
