@@ -64,7 +64,7 @@ The examples includes screenshots, ssk, sskb and glb files.
 
 [LICENSE](LICENSE).
 
-And the full license files can be found at [LICENSE](LICENSE/).
+And the full license files can be found at [/licenses](/licenses/).
 
 ---
 
